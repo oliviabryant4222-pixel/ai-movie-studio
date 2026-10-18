@@ -1,6 +1,8 @@
 package com.aimoviestudio.app
 
 import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.graphics.Color
 import android.view.Gravity
@@ -9,95 +11,177 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.appcompat.app.AppCompatActivity
 
-class MainActivity : Activity() {
-    private val bg = Color.rgb(16, 18, 24)
-    private val panel = Color.rgb(28, 32, 42)
-    private val accent = Color.rgb(90, 160, 255)
-    private val white = Color.WHITE
-    private val muted = Color.rgb(185, 192, 205)
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var statusText: TextView
+    private lateinit var mediaText: TextView
+    private lateinit var root: LinearLayout
+
+    private var audioUri: Uri? = null
+    private val mediaUris = mutableListOf<Uri>()
+
+    private val audioPicker =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) {
+                audioUri = uri
+                try {
+                    contentResolver.takePersistableUriPermission(
+                        uri,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+                } catch (_: Exception) {
+                }
+                updateMediaInfo()
+                statusText.text = "Voiceover audio selected successfully."
+            }
+        }
+
+    private val mediaPicker =
+        registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+            if (uris.isNotEmpty()) {
+                mediaUris.clear()
+                mediaUris.addAll(uris)
+                uris.forEach { uri ->
+                    try {
+                        contentResolver.takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                        )
+                    } catch (_: Exception) {
+                    }
+                }
+                updateMediaInfo()
+                statusText.text = "${uris.size} media file(s) selected."
+            }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val scroll = ScrollView(this).apply { setBackgroundColor(bg) }
-        val root = LinearLayout(this).apply {
+        root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setPadding(22, 32, 22, 28)
-            background = null
+            setPadding(24, 28, 24, 24)
+            setBackgroundColor(Color.rgb(15, 18, 30))
         }
+
+        val scroll = ScrollView(this)
         scroll.addView(root)
-        setContentView(scroll)
 
-        root.addView(text("AI MOVIE STUDIO", 27f, white, true))
-        root.addView(text("ULTIMATE • Android build foundation", 13f, accent, true))
-        root.addView(spacer(22))
+        val title = TextView(this).apply {
+            text = "AI MOVIE STUDIO"
+            textSize = 28f
+            setTextColor(Color.rgb(100, 220, 255))
+            gravity = Gravity.CENTER
+            setPadding(0, 12, 0, 8)
+        }
+        root.addView(title)
 
-        val status = text(
-            "PROJECT FOUNDATION\nThis is the initial app shell. AI matching, timeline editing, audio tools and rendering are not implemented yet.",
-            14f, muted, false
-        )
-        status.setPadding(16, 16, 16, 16)
-        status.setBackgroundColor(panel)
-        root.addView(status)
-        root.addView(spacer(20))
+        val subtitle = TextView(this).apply {
+            text = "Your mobile video editing workspace"
+            textSize = 15f
+            setTextColor(Color.LTGRAY)
+            gravity = Gravity.CENTER
+            setPadding(0, 0, 0, 24)
+        }
+        root.addView(subtitle)
 
-        root.addView(section("1  •  MEDIA INPUT"))
-        root.addView(actionButton("Choose voiceover", "Audio picker will be added in the next development step."))
-        root.addView(actionButton("Choose images / video", "Media picker and thumbnail analysis will be added next."))
-        root.addView(spacer(14))
-
-        root.addView(section("2  •  AI WORKFLOW"))
-        root.addView(actionButton("Analyze narration", "Speech recognition and timestamp extraction are not connected yet."))
-        root.addView(actionButton("Match visuals to narration", "Semantic matching engine is not connected yet."))
-        root.addView(actionButton("Build edit timeline", "Timeline engine is planned; it is not implemented yet."))
-        root.addView(spacer(14))
-
-        root.addView(section("3  •  EDIT & EXPORT"))
-        root.addView(actionButton("Open editor", "Multi-track timeline and effects are planned for later builds."))
-        root.addView(actionButton("Export video", "Rendering pipeline is not implemented yet."))
-        root.addView(spacer(22))
-
-        root.addView(text("ZERO-BUDGET DESIGN", 13f, accent, true))
-        root.addView(text(
-            "The goal is to avoid mandatory paid APIs. Free cloud AI may have usage limits; local processing will be used where practical.",
-            13f, muted, false
-        ))
-    }
-
-    private fun text(value: String, size: Float, color: Int, bold: Boolean): TextView =
-        TextView(this).apply {
-            text = value
-            textSize = size
-            setTextColor(color)
-            if (bold) setTypeface(typeface, android.graphics.Typeface.BOLD)
-            setPadding(0, 3, 0, 3)
+        addSection("1. VOICEOVER")
+        addButton("Choose voiceover audio") {
+            audioPicker.launch(arrayOf("audio/*"))
         }
 
-    private fun section(value: String): TextView =
-        text(value, 16f, white, true).apply { setPadding(0, 4, 0, 10) }
+        addSection("2. VISUAL MEDIA")
+        addButton("Choose images or videos") {
+            mediaPicker.launch(arrayOf("image/*", "video/*"))
+        }
 
-    private fun spacer(height: Int) = android.view.View(this).apply {
-        layoutParams = LinearLayout.LayoutParams(1, height)
+        addSection("3. PROJECT FILES")
+        mediaText = TextView(this).apply {
+            textSize = 14f
+            setTextColor(Color.WHITE)
+            setPadding(12, 12, 12, 12)
+            text = "No files selected yet."
+        }
+        root.addView(mediaText)
+
+        addSection("4. WORKSPACE STATUS")
+        statusText = TextView(this).apply {
+            text = "Ready. Select an audio file and visual media to begin."
+            textSize = 14f
+            setTextColor(Color.rgb(120, 240, 170))
+            setPadding(12, 12, 12, 16)
+        }
+        root.addView(statusText)
+
+        addButton("Clear selected files") {
+            audioUri = null
+            mediaUris.clear()
+            updateMediaInfo()
+            statusText.text = "Selection cleared."
+        }
+
+        val note = TextView(this).apply {
+            text = "\nCurrent version: media selection foundation.\nAI narration matching, timeline editing, effects and video export still need to be built."
+            textSize = 12f
+            setTextColor(Color.LTGRAY)
+            setPadding(8, 20, 8, 20)
+        }
+        root.addView(note)
+
+        setContentView(scroll)
     }
 
-    private fun actionButton(label: String, message: String): Button =
-        Button(this).apply {
+    private fun addSection(text: String) {
+        val heading = TextView(this).apply {
+            this.text = text
+            textSize = 18f
+            setTextColor(Color.rgb(100, 220, 255))
+            setPadding(0, 22, 0, 8)
+        }
+        root.addView(heading)
+    }
+
+    private fun addButton(label: String, action: () -> Unit) {
+        val button = Button(this).apply {
             text = label
+            textSize = 15f
             isAllCaps = false
-            setTextColor(white)
-            setBackgroundColor(panel)
-            gravity = Gravity.CENTER_VERTICAL
-            setOnClickListener {
-                android.app.AlertDialog.Builder(this@MainActivity)
-                    .setTitle(label)
-                    .setMessage(message)
-                    .setPositiveButton("OK", null)
-                    .show()
-            }
-            layoutParams = LinearLayout.LayoutParams(
+            setOnClickListener { action() }
+        }
+
+        root.addView(
+            button,
+            LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            ).apply { bottomMargin = 8 }
+            ).apply {
+                bottomMargin = 8
+            }
+        )
+    }
+
+    private fun updateMediaInfo() {
+        val lines = mutableListOf<String>()
+
+        lines.add(
+            if (audioUri != null) {
+                "Voiceover: ${audioUri!!.lastPathSegment ?: "Audio selected"}"
+            } else {
+                "Voiceover: Not selected"
+            }
+        )
+
+        lines.add("")
+        lines.add("Visual files: ${mediaUris.size}")
+
+        mediaUris.forEachIndexed { index, uri ->
+            lines.add("${index + 1}. ${uri.lastPathSegment ?: "Media file"}")
         }
+
+        mediaText.text = lines.joinToString("\n")
+    }
 }
