@@ -7,9 +7,10 @@
     <!-- The optional Nightmare Mobile local HTTP server binds to a LAN interface. -->
     <application
         android:allowBackup="false"
-        android:label="RealFrame Studio Beta"
+        android:label="RealFrame Studio AI"
         android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <activity android:name=".WebStudioActivity" android:exported="false"/>
         <service android:name=".RenderService" android:exported="false" android:foregroundServiceType="dataSync"/>
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
