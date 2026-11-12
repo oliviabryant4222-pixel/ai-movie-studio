@@ -44,7 +44,15 @@ class Handler(BaseHTTPRequestHandler):
     def authorized(self):
         return self.headers.get('Authorization') == f'Bearer {self.server.token}'
 
+    def authorized_webui(self):
+        expected = base64.b64encode(('realframe:' + self.server.token).encode()).decode()
+        return self.headers.get('Authorization') == 'Basic ' + expected
+
     def do_GET(self):
+        if self.path == '/sdapi/v1/sd-models':
+            if not self.authorized_webui():
+                return self.answer(401, {'error': 'valid Basic credential required'})
+            return self.answer(200, [{'title': 'synthetic-demo-NOT-AI'}])
         if self.path == '/info':
             return self.answer(200, {'app':'Mock Nightmare (NO AI)', 'rendering':False})
         if not self.authorized():
@@ -75,6 +83,20 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(payload)
 
     def do_POST(self):
+        if self.path == '/sdapi/v1/txt2img':
+            if not self.authorized_webui():
+                return self.answer(401, {'error': 'valid Basic credential required'})
+            n = int(self.headers.get('Content-Length', '0'))
+            if n <= 0 or n > 500_000:
+                return self.answer(413, {'error': 'invalid request length'})
+            try:
+                data = json.loads(self.rfile.read(n))
+            except (ValueError, UnicodeDecodeError):
+                return self.answer(400, {'error': 'malformed JSON'})
+            if not data.get('prompt'):
+                return self.answer(400, {'error': 'prompt required'})
+            return self.answer(200, {'images': [base64.b64encode(PNG).decode()],
+                                     'info': 'SYNTHETIC ONLY - NO AI'})
         if not self.authorized():
             return self.answer(401, {'error':'valid bearer token required'})
         if self.path != '/run':

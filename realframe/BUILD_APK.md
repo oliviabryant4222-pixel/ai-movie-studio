@@ -1,23 +1,20 @@
-# Build RealFrame Android APK
+# RealFrame Studio v1.1: GitHub Actions Debug APK build
 
-This is a **debug/testing build**, not a Play Store release. The project root is `android/`.
+GitHub repo workflow entrypoint is `.github/workflows/android-debug.yml`, project root `android/`.
 
-## GitHub Actions
-This repo contains a workflow at `.github/workflows/android-debug.yml`. Upload the extracted project contents **at the repository root**, not only a ZIP. Open Actions → Build Android debug APK → Run workflow. The workflow runs 25 Python tests, preflight, downloads SDK, builds, signs and uploads `app-debug.apk` as an artifact.
+1. Upload/commit this project's extracted contents to an appropriately named GitHub branch, including `android/`, `tests/`, `tools/`, and `.github/workflows/android-debug.yml`.
+2. Trigger a build from the Actions tab (workflow_dispatch, select the branch), or configure the workflow push trigger to your branch.
+3. Confirm all checks pass: Python tests, Java MediaSignature test, Android Gradle compilation, `apksigner verify`, and `aapt dump badging`.
+4. From successful workflow run → Artifacts → `RealFrameStudio-v1_1-debug-apk` → extract `app-debug.apk`.
+5. Install on Samsung. If Android refuses with "App not installed" / conflicting signature, previous v1.0 debug APK was signed with a different key; **do not uninstall old app if you need its private saved data**. See README update-signing warning.
 
-If source lives under `realframe/` in a GitHub branch, a branch workflow under `.github/workflows/realframe-v1-build.yml` is also provided and builds from that folder; it uploads `RealFrameStudio-v1-debug-apk`.
-
-## PC build
-Install Android SDK 35, Build Tools 35.0.0, JDK 17, and Gradle 8.9, then:
-
+CLI equivalent when SDK 35/JDK 17/Gradle 8.9 installed:
 ```
-cd realframe_studio_v1/android
-gradle --no-daemon assembleDebug
+python3 -m unittest discover -s tests -v
+javac -d /tmp/realframe-test android/app/src/main/java/studio/realframe/MediaSignature.java tests/TestMediaSignature.java
+java -cp /tmp/realframe-test TestMediaSignature
+python3 tools/preflight.py
+cd android && gradle --no-daemon assembleDebug
 ```
 
-APK: `android/app/build/outputs/apk/debug/app-debug.apk`.
-
-## Samsung installation
-Download artifact ZIP, extract `app-debug.apk`, use Files → APK → Install. Android may ask to allow installs from your browser/file manager. After installing: first test Home → Offline TEST image / video, then configure an inference backend under Settings for real AI.
-
-If the workflow fails, open Actions job logs and fix the reported compilation or SDK issue. Do not claim a working APK without a successful build.
+This repository does not include third-party native AI inference binaries. An APK build alone is not evidence real model inference is functional. Validate via Connect AI screen with a compatible installed Nightmare image checkpoint and saved video flow.

@@ -27,7 +27,7 @@ import java.util.concurrent.Executors;
 
 /** Native Android prototype: local NPU companion + optional HF Gradio + clip editor. */
 public final class MainActivity extends Activity {
-    private static final int PICK_IMAGE = 1001, PICK_CLIPS = 1002;
+    private static final int PICK_IMAGE = 1001, PICK_CLIPS = 1002, EXPORT_BACKUP = 1003, IMPORT_BACKUP = 1004;
     private StudioStore store;
     private SecretVault prefs;
     private Renderer renderer;
@@ -94,11 +94,11 @@ public final class MainActivity extends Activity {
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(12), dp(16), dp(12), dp(6));
         root.setBackgroundColor(Color.rgb(249,249,251)); setContentView(root);
-        TextView header = text("REALFRAME  ·  AI STUDIO  1.0", 17);
+        TextView header = text("REALFRAME  ·  AI STUDIO  1.1", 17);
         header.setTypeface(null, 1); root.addView(header);
         HorizontalScrollView menuScroll = new HorizontalScrollView(this);
         LinearLayout menu = new LinearLayout(this); menu.setOrientation(LinearLayout.HORIZONTAL);
-        String[] tabs = {"Home", "Generate", "Characters", "Storyboard", "Jobs", "Clips", "Settings"};
+        String[] tabs = {"Home", "Connect AI", "Generate", "Characters", "Storyboard", "Jobs", "Clips", "Settings"};
         for (String name : tabs) {
             Button b = new Button(this); b.setText(name); b.setTextSize(12);
             b.setAllCaps(false); b.setOnClickListener(v -> navigate(name));
@@ -112,6 +112,7 @@ public final class MainActivity extends Activity {
     }
     private void navigate(String tab) {
         switch (tab) {
+            case "Connect AI": showConnect(); break;
             case "Generate": showGenerate(); break;
             case "Characters": showCharacters(); break;
             case "Storyboard": showStoryboard(); break;
@@ -125,6 +126,7 @@ public final class MainActivity extends Activity {
     private void showHome() {
         layout("Home"); title("Your mobile AI production studio");
         note("Source-code prototype (requires separate working inference backend). Generate via Nightmare Mobile local API or optional public Hugging Face Gradio Spaces. Free cloud GPU quotas are not unlimited.");
+        button("⚡ Connect and generate first REAL AI image", this::showConnect);
         button("📸 Image / 🎬 Video generation", this::showGenerate);
         button("🧬 Character Vault", this::showCharacters);
         button("📦 Queue / resume jobs", this::showJobs);
@@ -140,6 +142,96 @@ public final class MainActivity extends Activity {
         note("PHONE-LOCAL: install Nightmare Mobile separately, download compatible models, enable Settings → Advanced → API. Your app does not bundle its proprietary/missing native inference binary.");
         note("SNAPDRAGON 8 GEN 3 / 12GB: Most Nightmare video flows list 8 Elite; Wan 2.2 is marked alpha on 8 Gen 3. Verify on-device model support first. Cloud video requires a working Space and free quota.");
         note("A foreground notification keeps your render queue running when leaving this screen, within Android foreground-service time limits. Avoid force-stopping the app. Saved uncertain jobs need manual retry. MP4 merging needs matching formats.");
+    }
+
+    /** One-screen setup for the user's first real on-phone image/video render.
+     * Uses documented Nightmare API; unlike offline diagnostics, these jobs require model inference.
+     */
+    private void showConnect() {
+        layout("Connect AI"); title("Connect real AI · Snapdragon");
+        note("This is the next step after the offline TEST. For phone-local images, install Nightmare Mobile and a compatible checkpoint first. Enable Nightmare Settings → Advanced → API → Listen on local network and copy its token. Real AI rendering is performed by Nightmare, not the test-image generator.");
+        EditText url = field("Nightmare API URL", prefs.get("localUrl", "http://127.0.0.1:8820"), false);
+        EditText token = field("Nightmare token (blank keeps saved token)", "", false);
+        token.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        button("Save local connection", () -> {
+            try {
+                String address = url.getText().toString().trim();
+                Uri parsed = Uri.parse(address);
+                if (!("http".equals(parsed.getScheme()) || "https".equals(parsed.getScheme())) ||
+                        parsed.getHost() == null) throw new Exception("Enter full API URL beginning with http:// or https://");
+                prefs.set("localUrl", address);
+                if (!token.getText().toString().trim().isEmpty())
+                    prefs.setToken("nightmare", token.getText().toString().trim());
+                notifyUser("Connection saved. Now tap Check installed image models.");
+            } catch (Exception e) { notifyUser(e.getMessage()); }
+        });
+        button("1 · Check installed image models", () -> {
+            utilityExecutor.execute(() -> {
+                try {
+                    String models = renderer.localWebUiModels();
+                    if (models.trim().equals("[]"))
+                        throw new Exception("No compatible installed image model. Download/select one in Nightmare first.");
+                    String shown = models.length() > 5000 ? models.substring(0, 5000) + "\n…" : models;
+                    runOnUiThread(() -> new android.app.AlertDialog.Builder(this)
+                            .setTitle("Connected · image models")
+                            .setMessage(shown)
+                            .setPositiveButton("Great", null).show());
+                } catch (Exception e) { notifyUser("Image API not ready: " + e.getMessage()); }
+            });
+        });
+        EditText firstPrompt = field("Your first REAL image prompt",
+                "Realistic unretouched smartphone photograph of a fictional adult, natural skin texture, soft daylight, comfortable casual clothing, plausible anatomy", true);
+        button("2 · Generate REAL local image (1 image)", () -> {
+            try {
+                String description = firstPrompt.getText().toString().trim();
+                if (description.isEmpty()) throw new Exception("Type an image prompt");
+                JSONObject job = makeJob("image", "Local", "a1111", description,
+                        randomSeed(), "", "", "");
+                job.put("negative", "artificial glow, plastic skin, overprocessing")
+                        .put("width", 512).put("height", 768).put("steps", 20).put("cfg", 6);
+                store.putJob(job);
+                notifyUser("REAL local image queued. Open Jobs to view the result or error.");
+                pump(); showJobs();
+            } catch (Exception e) { notifyUser(e.getMessage()); }
+        });
+        sep(); title("Video — use a supported Nightmare flow");
+        note("Video models are heavy on Snapdragon 8 Gen 3. Some flows are unsupported/experimental. Choose a working video flow inside Nightmare first, save it, then discover it below. If image-to-video, attach an image before queuing.");
+        String savedFlow = prefs.get("videoFlow", "");
+        note("Selected video flow: " + (savedFlow.isEmpty() ? "none" : savedFlow));
+        button("3 · Discover local video flows", () -> {
+            utilityExecutor.execute(() -> {
+                try {
+                    List<String> found = renderer.localFlowIds();
+                    if (found.isEmpty()) throw new Exception("No flows found. Check Nightmare API.");
+                    String[] choices = found.toArray(new String[0]);
+                    runOnUiThread(() -> new android.app.AlertDialog.Builder(this)
+                            .setTitle("Choose your video-capable flow")
+                            .setItems(choices, (dialog, index) -> {
+                                prefs.set("videoFlow", choices[index]);
+                                notifyUser("Saved flow " + choices[index] + ". Verify it makes VIDEO in Nightmare.");
+                                showConnect();
+                            }).setNegativeButton("Cancel", null).show());
+                } catch (Exception e) { notifyUser("Flows not available: " + e.getMessage()); }
+            });
+        });
+        button("Attach starting image for image-to-video", this::pickImage);
+        EditText videoPrompt = field("Short video motion prompt", "The adult person smiles naturally and gently turns toward the window. Stable camera, smooth natural motion.", true);
+        button("4 · Queue REAL local video (1 clip)", () -> {
+            try {
+                String selected = prefs.get("videoFlow", "");
+                if (selected.isEmpty() || "txt2img".equals(selected) || "a1111".equals(selected))
+                    throw new Exception("Discover and select a real video flow, not a text-to-image flow.");
+                JSONObject job = makeJob("video", "Local", selected,
+                        videoPrompt.getText().toString().trim(), randomSeed(), selectedImage, "", "");
+                job.put("duration", 2).put("flowParams", "{}");
+                store.putJob(job);
+                selectedImage = "";
+                notifyUser("Real video job queued; model must support this flow. Check Jobs for result/error.");
+                pump(); showJobs();
+            } catch (Exception e) { notifyUser(e.getMessage()); }
+        });
+        sep(); note("CLOUD: go to Settings to configure optional Hugging Face Gradio Spaces. Hosted free GPUs are quota-limited and have provider rules. No external paid compute is required by this app.");
+        button("Configure optional cloud image/video API", this::showSettings);
     }
 
     private void pickImage() {
@@ -162,6 +254,34 @@ public final class MainActivity extends Activity {
                 selectedImage = uri.toString();
                 notifyUser("Reference image attached. Return to form and save/queue.");
                 // Don't navigate here: keep form controls/typed text intact.
+            } else if (req == EXPORT_BACKUP && data.getData() != null) {
+                Uri uri = data.getData();
+                utilityExecutor.execute(() -> {
+                    try {
+                        byte[] raw = store.exportBackup().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+                        try (java.io.OutputStream out = getContentResolver().openOutputStream(uri)) {
+                            if (out == null) throw new Exception("Cannot create backup file");
+                            out.write(raw);
+                        }
+                        notifyUser("Project metadata backed up; media files and API tokens are NOT included.");
+                    } catch (Exception e) { notifyUser("Backup failed: " + e.getMessage()); }
+                });
+            } else if (req == IMPORT_BACKUP && data.getData() != null) {
+                Uri uri = data.getData();
+                utilityExecutor.execute(() -> {
+                    try {
+                        byte[] raw;
+                        try (java.io.InputStream in = getContentResolver().openInputStream(uri)) {
+                            if (in == null) throw new Exception("Cannot open backup");
+                            raw = in.readNBytes(5_000_001);
+                        }
+                        if (raw.length > 5_000_000) throw new Exception("Backup file exceeds 5 MB safety limit");
+                        prefs.set("queuePaused", "1");
+                        store.importBackup(new String(raw, java.nio.charset.StandardCharsets.UTF_8));
+                        notifyUser("Project metadata restored. Queue paused: review jobs then Resume.");
+                        runOnUiThread(this::showJobs);
+                    } catch (Exception e) { notifyUser("Restore failed: " + e.getMessage()); }
+                });
             } else if (req == PICK_CLIPS) {
                 if (data.getClipData() != null) {
                     for (int i=0; i<data.getClipData().getItemCount(); i++) {
@@ -274,11 +394,23 @@ public final class MainActivity extends Activity {
         Spinner type = spinner("Media", "image", "video");
         Spinner backend = spinner("Backend", "Local", "Cloud", "Demo");
         EditText prompt = field("Scene / generation prompt", "Photorealistic adult woman standing in soft window light, natural skin texture, realistic camera photography", true);
-        EditText flow = field("Nightmare flow ID (cloud ignores this)", "txt2img", false);
+        EditText flow = field("Local flow: a1111 = easy images; choose actual saved video flow", "a1111", false);
+        type.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+            @Override public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                if (position == 1 && "a1111".equals(flow.getText().toString().trim()))
+                    flow.setText(prefs.get("videoFlow", "current"));
+                if (position == 0 && (flow.getText().toString().trim().isEmpty() ||
+                        "current".equals(flow.getText().toString().trim())))
+                    flow.setText("a1111");
+            }
+            @Override public void onNothingSelected(android.widget.AdapterView<?> parent) { }
+        });
         EditText model = field("Nightmare installed model ID (optional; overrides flow model)", "", false);
         EditText nodeParams = field("Advanced local flow node params JSON (optional; see Settings → Inspect flow)", "{}", true);
         EditText negative = field("Negative prompt (when supported)", "AI glow, plastic skin, oversmoothing", true);
         EditText duration = field("Requested seconds: cloud {{duration}}; for local use video node params", "2", false);
+        EditText steps = field("Image steps (A1111 / local image route)", "20", false);
+        EditText cfg = field("Guidance CFG for A1111 images", "6.0", false);
         EditText width = field("Requested width (local flow-dependent)", "512", false);
         EditText height = field("Requested height (local flow-dependent)", "768", false);
         Spinner promptMode = spinner("Batch prompt mode", "Same prompt / seed variations", "One prompt per line × variations");
@@ -305,13 +437,18 @@ public final class MainActivity extends Activity {
                 long initial = seedValue(seed.getText().toString());
                 if ("video".equals(type.getSelectedItem().toString()) &&
                         "Local".equals(backend.getSelectedItem().toString()) &&
-                        "txt2img".equals(flow.getText().toString().trim()))
-                    throw new Exception("Video needs an actual Nightmare video flow ID, not txt2img. Use Settings → Test local connection to list flows.");
+                        ("txt2img".equals(flow.getText().toString().trim()) ||
+                         "a1111".equals(flow.getText().toString().trim())))
+                    throw new Exception("Video needs an actual Nightmare video flow ID, not txt2img/a1111. Use Connect AI to select a saved video flow.");
                 // Parse everything first: a malformed setting must never leave half a batch queued.
                 String validatedParams = new JSONObject(nodeParams.getText().toString()).toString();
                 int parsedDuration = parseCount(duration.getText().toString(), 20, "Seconds");
                 int parsedWidth = parseCount(width.getText().toString(), 2048, "Width");
                 int parsedHeight = parseCount(height.getText().toString(), 2048, "Height");
+                int parsedSteps = parseCount(steps.getText().toString(), 100, "Steps");
+                double parsedCfg = Double.parseDouble(cfg.getText().toString().trim());
+                if (!Double.isFinite(parsedCfg) || parsedCfg < 1 || parsedCfg > 30)
+                    throw new Exception("CFG must be between 1 and 30");
                 List<JSONObject> newJobs = new ArrayList<>();
                 for (String scene : prompts) for (int i=0; i<variations; i++) {
                     int index = newJobs.size();
@@ -326,6 +463,7 @@ public final class MainActivity extends Activity {
                     job.put("duration", parsedDuration);
                     job.put("width", parsedWidth);
                     job.put("height", parsedHeight);
+                    job.put("steps", parsedSteps).put("cfg", parsedCfg);
                     newJobs.add(job);
                 }
                 store.putJobs(newJobs); // One atomic write, not 250 repeated full-file rewrites.
@@ -333,7 +471,7 @@ public final class MainActivity extends Activity {
                 pump(); showJobs();
             } catch (Exception e) { notifyUser(e.getMessage()); }
         });
-        sep(); note("Tips: open Settings → Test local API to see installed model IDs and available flows. Video requires a video-capable flow, e.g. one you saved from a supported Video flow; txt2img outputs an image, not an MP4. Image reference is optional; for continuity use Image-to-video flow when supported.");
+        sep(); note("Tips: open Connect AI for one-tap REAL image test using Nightmare's documented Automatic1111 endpoint. Video needs a supported saved flow. Settings → Test local API lists installed models and available flows. Video requires a video-capable flow, e.g. one you saved from a supported Video flow; txt2img outputs an image, not an MP4. Image reference is optional; for continuity use Image-to-video flow when supported.");
     }
 
     private void showStoryboard() {
@@ -569,8 +707,33 @@ public final class MainActivity extends Activity {
         note("Native join does not transcode: source clips must match codec, dimensions and audio format. For mismatched clips use the included tools/stitch.py (FFmpeg) on Termux/PC.");
     }
 
+    private void exportBackupPicker() {
+        Intent save = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+        save.addCategory(Intent.CATEGORY_OPENABLE);
+        save.setType("application/json");
+        save.putExtra(Intent.EXTRA_TITLE, "RealFrame_Project_Backup.json");
+        startActivityForResult(save, EXPORT_BACKUP);
+    }
+
+    private void restoreBackupPicker() {
+        new android.app.AlertDialog.Builder(this)
+            .setTitle("Replace saved project metadata?")
+            .setMessage("Restore replaces characters, jobs and clip lists. Running jobs must finish first; waiting jobs will be paused. Files and API tokens are NOT in backups. Old media references may no longer work. Continue?")
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Choose backup", (dialog, which) -> {
+                Intent select = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                select.addCategory(Intent.CATEGORY_OPENABLE);
+                select.setType("application/json");
+                startActivityForResult(select, IMPORT_BACKUP);
+            }).show();
+    }
+
     private void showSettings() {
         layout("Settings"); title("Renderers / Connections");
+        note("PROJECT PROTECTION: export your queue, fictional character descriptions and clip metadata before resetting/reinstalling. No generated images, videos or API tokens are in this file. Existing photo/video content URIs may not survive a reinstall.");
+        button("Export project metadata backup (.json)", this::exportBackupPicker);
+        button("Restore project metadata backup (replaces current)", this::restoreBackupPicker);
+        sep();
         note("LOCAL: install Nightmare Mobile and an image/video model supported by your Snapdragon; then Settings → Advanced → API → Listen on local network. Copy displayed URL and token. The upstream video guide lists some 8 Gen 3 flows as alpha/experimental; confirm in Nightmare's model list. 127.0.0.1 may work on the same phone; otherwise use its shown LAN URL.");
         EditText localUrl = field("Nightmare local API base URL", prefs.get("localUrl","http://127.0.0.1:8820"),false);
         EditText localToken = field("Nightmare API token (leave blank to keep stored)", "",false);

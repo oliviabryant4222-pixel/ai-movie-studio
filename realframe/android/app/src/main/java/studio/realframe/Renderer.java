@@ -13,11 +13,14 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.BufferedReader;
+import java.io.BufferedInputStream;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
@@ -42,7 +45,7 @@ public final class Renderer {
         conn.setRequestMethod(method);
         conn.setConnectTimeout(20000);
         conn.setReadTimeout(1200000); // a queued video job can take many minutes
-        conn.setRequestProperty("User-Agent", "RealFrameStudio/1.0 Android");
+        conn.setRequestProperty("User-Agent", "RealFrameStudio/1.1 Android");
         if (!token.isEmpty()) conn.setRequestProperty("Authorization", "Bearer " + token);
         return conn;
     }
@@ -70,6 +73,98 @@ public final class Renderer {
         try { return body(c); } finally { c.disconnect(); }
     }
 
+    /** Nightmare also exposes Automatic1111-compatible image API.
+     * Its authentication is HTTP Basic, unlike Nightmare's /run API (Bearer).
+     * See https://abrahampaulj.github.io/nightmare-mobile/reference/api/ .
+     */
+    private HttpURLConnection a1111Connection(String url, String method) throws Exception {
+        HttpURLConnection conn = connection(url, method, "");
+        String token = settings.token("nightmare");
+        if (!token.isEmpty()) {
+            String value = "realframe:" + token;
+            String encoded = Base64.encodeToString(value.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
+            conn.setRequestProperty("Authorization", "Basic " + encoded);
+        }
+        return conn;
+    }
+
+    public String localWebUiModels() throws Exception {
+        String base = cleanBase(settings.get("localUrl", "http://127.0.0.1:8820"));
+        HttpURLConnection conn = a1111Connection(base + "/sdapi/v1/sd-models", "GET");
+        try { return body(conn); } finally { conn.disconnect(); }
+    }
+
+    private String postA1111(String url, JSONObject json) throws Exception {
+        HttpURLConnection conn = a1111Connection(url, "POST");
+        conn.setDoOutput(true);
+        conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+        try (OutputStream out = conn.getOutputStream()) {
+            out.write(json.toString().getBytes(StandardCharsets.UTF_8));
+        }
+        try { return body(conn); } finally { conn.disconnect(); }
+    }
+
+    /** Generates a real locally computed image, provided Nightmare + model is installed.
+     * This route needs no custom flow graph setup.
+     */
+    private String fromAutomatic1111(JSONObject job) throws Exception {
+        if ("video".equals(job.optString("kind")))
+            throw new IOException("Automatic1111 image API cannot generate video. Select a video flow.");
+        String base = cleanBase(settings.get("localUrl", "http://127.0.0.1:8820"));
+        JSONObject args = new JSONObject()
+                .put("prompt", job.optString("prompt"))
+                .put("negative_prompt", job.optString("negative"))
+                .put("seed", job.optLong("seed", -1))
+                .put("width", job.optInt("width", 512))
+                .put("height", job.optInt("height", 768))
+                .put("steps", job.optInt("steps", 20))
+                .put("cfg_scale", job.optDouble("cfg", 6.0))
+                .put("batch_size", 1);
+        JSONObject result = new JSONObject(postA1111(base + "/sdapi/v1/txt2img", args));
+        JSONArray images = result.optJSONArray("images");
+        if (images == null || images.length() == 0)
+            throw new IOException("Nightmare image API returned no images. Check selected model.");
+        String encoded = images.optString(0, "");
+        if (encoded.startsWith("data:") && encoded.contains(","))
+            encoded = encoded.substring(encoded.indexOf(',') + 1);
+        if (encoded.isEmpty()) throw new IOException("Empty image from local API");
+        byte[] bytes = Base64.decode(encoded, Base64.DEFAULT);
+        // Validate before creating a Gallery entry.
+        String mime = MediaSignature.detect(bytes);
+        if (!MediaSignature.matchesKind(mime, "image"))
+            throw new IOException("Nightmare returned a non-image payload");
+        return saveBytes(bytes, mime, "image_" + System.currentTimeMillis() + MediaSignature.extension(mime));
+    }
+
+    /** Local flow identifiers for first-run selection. Supports array and wrapped API shapes. */
+    public java.util.List<String> localFlowIds() throws Exception {
+        String base = cleanBase(settings.get("localUrl", "http://127.0.0.1:8820"));
+        String json = getJson(base + "/flows", settings.token("nightmare"));
+        Object root = new org.json.JSONTokener(json).nextValue();
+        java.util.LinkedHashSet<String> found = new java.util.LinkedHashSet<>();
+        collectFlowIds(root, found, 0);
+        return new java.util.ArrayList<>(found);
+    }
+
+    private static void collectFlowIds(Object root, java.util.Set<String> out, int depth) {
+        if (root == null || depth > 3 || out.size() >= 120) return;
+        if (root instanceof JSONArray) {
+            JSONArray items = (JSONArray) root;
+            for (int i=0; i<items.length(); i++) collectFlowIds(items.opt(i), out, depth + 1);
+        } else if (root instanceof JSONObject) {
+            JSONObject value = (JSONObject) root;
+            for (String key : new String[]{"id", "flow", "flow_id"}) {
+                String id = value.optString(key, "").trim();
+                if (!id.isEmpty()) { out.add(id); break; }
+            }
+            for (String key : new String[]{"flows", "items", "recipes", "saved", "data"})
+                collectFlowIds(value.opt(key), out, depth + 1);
+        } else if (root instanceof String) {
+            String value = ((String)root).trim();
+            if (!value.isEmpty()) out.add(value);
+        }
+    }
+
     public String localInfo() throws Exception {
         String url = cleanBase(settings.get("localUrl", "http://127.0.0.1:8820"));
         String token = settings.token("nightmare");
@@ -95,7 +190,10 @@ public final class Renderer {
     public String generate(JSONObject job) throws Exception {
         String backend = job.optString("backend", "Local");
         if ("Demo".equals(backend)) return fromDemo(job);
-        return "Cloud".equals(backend) ? fromGradio(job) : fromNightmare(job);
+        if ("Cloud".equals(backend)) return fromGradio(job);
+        if ("image".equals(job.optString("kind")) &&
+                "a1111".equals(job.optString("flow"))) return fromAutomatic1111(job);
+        return fromNightmare(job);
     }
 
     /** Built-in diagnostics: visible test artefacts, NEVER presented as AI output. */
@@ -439,12 +537,23 @@ public final class Renderer {
             safeToken = token;
         }
         HttpURLConnection c = connection(url, "GET", safeToken);
-        String name = (video ? "clip_" : "image_") + System.currentTimeMillis() + (video ? ".mp4" : ".png");
-        String mime = video ? "video/mp4" : "image/png";
         try {
             if (c.getResponseCode() >= 400) throw new IOException("Media download HTTP " + c.getResponseCode());
-            try (InputStream in = c.getInputStream()) {
-                return saveStream(in, mime, name);
+            try (BufferedInputStream in = new BufferedInputStream(c.getInputStream())) {
+                in.mark(32);
+                byte[] head = new byte[16];
+                int n = 0;
+                while (n < head.length) {
+                    int r = in.read(head, n, head.length - n);
+                    if (r < 0) break;
+                    n += r;
+                }
+                in.reset();
+                String actualMime = MediaSignature.detect(Arrays.copyOf(head, n));
+                if (!MediaSignature.matchesKind(actualMime, kind))
+                    throw new IOException("API returned non-" + kind + " bytes (possibly an HTML quota/login error), refusing to save a corrupt Gallery file");
+                String name = (video ? "clip_" : "image_") + System.currentTimeMillis() + MediaSignature.extension(actualMime);
+                return saveStream(in, actualMime, name);
             }
         } finally { c.disconnect(); }
     }

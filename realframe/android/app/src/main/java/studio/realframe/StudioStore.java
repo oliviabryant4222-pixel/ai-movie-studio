@@ -170,6 +170,64 @@ public final class StudioStore {
         write(clipsFile, arr);
     }
 
+    /** Portable metadata only. Intentionally excludes passwords, API tokens and media bytes.
+     * Original content:// references might not be valid on a newly installed app.
+     */
+    public synchronized String exportBackup() throws Exception {
+        return new JSONObject().put("format", "realframe-project-backup-v1")
+                .put("exportedAt", System.currentTimeMillis())
+                .put("jobs", read(jobsFile))
+                .put("characters", read(charactersFile))
+                .put("clips", read(clipsFile))
+                .toString(2);
+    }
+
+    public synchronized boolean hasRunningJobs() {
+        for (JSONObject job : jobs())
+            if ("running".equals(job.optString("status"))) return true;
+        return false;
+    }
+
+    /** Replace project metadata from a versioned, validated archive.
+     * All pending jobs become interrupted, never silently auto-render after restoration.
+     */
+    public synchronized void importBackup(String json) throws Exception {
+        if (hasRunningJobs()) throw new IllegalStateException("Wait for current render to finish before restoring");
+        JSONObject backup = new JSONObject(json);
+        if (!"realframe-project-backup-v1".equals(backup.optString("format")))
+            throw new IllegalArgumentException("Not a compatible RealFrame project backup");
+        JSONArray jobs = backup.getJSONArray("jobs");
+        JSONArray characters = backup.getJSONArray("characters");
+        JSONArray clips = backup.getJSONArray("clips");
+        validateArchiveSection(jobs, 10000, "jobs");
+        validateArchiveSection(characters, 2000, "characters");
+        validateArchiveSection(clips, 10000, "clips");
+        for (int i=0; i<jobs.length(); i++) {
+            JSONObject item = jobs.getJSONObject(i);
+            if ("queued".equals(item.optString("status")) ||
+                    "running".equals(item.optString("status"))) {
+                item.put("status", "interrupted");
+                item.put("message", "Restored job (paused for manual review; media references may be stale)");
+            }
+        }
+        // Per-file AtomicFile writes. The 3-file restore as a whole is NOT transactional.
+        write(charactersFile, characters);
+        write(clipsFile, clips);
+        write(jobsFile, jobs);
+    }
+
+    private static void validateArchiveSection(JSONArray records, int max, String label) throws Exception {
+        if (records.length() > max) throw new IllegalArgumentException("Too many " + label + " in backup");
+        java.util.HashSet<String> ids = new java.util.HashSet<>();
+        for (int i=0; i<records.length(); i++) {
+            JSONObject obj = records.getJSONObject(i);
+            String id = obj.optString("id", "");
+            if (id.isEmpty() || !ids.add(id)) throw new IllegalArgumentException("Invalid/duplicate ID in " + label);
+            if ("characters".equals(label) && obj.optInt("minAge", 18) < 18)
+                throw new IllegalArgumentException("Character must be an adult");
+        }
+    }
+
     public synchronized void recoverInterrupted() {
         try {
             JSONArray arr = new JSONArray();

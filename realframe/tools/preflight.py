@@ -25,7 +25,7 @@ def main() -> None:
         raise SystemExit('\n'.join('ERROR: ' + i for i in issues))
 
     gradle = gradle_path.read_text(encoding='utf-8')
-    for key in ['compileSdk = 35', 'targetSdk = 35', 'versionName = "1.0.0-test"']:
+    for key in ['compileSdk = 35', 'targetSdk = 35', 'versionName = "1.1.0-test"']:
         require(key in gradle, f'App gradle missing {key}')
     require('applicationId = "studio.realframe"' in gradle,
             'Unexpected applicationId: verify package/manifest before publishing')
@@ -49,7 +49,7 @@ def main() -> None:
 
     base = ANDROID/'app/src/main/java/studio/realframe'
     required = ['MainActivity.java','RenderService.java','Renderer.java', 'StudioStore.java',
-                'SecretVault.java','ClipStitcher.java']
+                'SecretVault.java','ClipStitcher.java','MediaSignature.java']
     for name in required:
         path = base / name
         require(path.is_file(), f'Missing Java file: {name}')

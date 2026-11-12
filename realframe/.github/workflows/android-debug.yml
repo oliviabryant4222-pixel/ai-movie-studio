@@ -30,6 +30,11 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
+      - name: Compile + run native Java media header tests
+        run: |
+          mkdir -p /tmp/realframe-header-tests
+          javac -d /tmp/realframe-header-tests android/app/src/main/java/studio/realframe/MediaSignature.java tests/TestMediaSignature.java
+          java -cp /tmp/realframe-header-tests TestMediaSignature
       - name: Install Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
@@ -51,6 +56,6 @@ jobs:
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: RealFrameStudio-v1-debug-apk
+          name: RealFrameStudio-v1_1-debug-apk
           path: android/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
