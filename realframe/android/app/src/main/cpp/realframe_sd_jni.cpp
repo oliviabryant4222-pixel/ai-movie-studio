@@ -234,3 +234,133 @@ Java_studio_realframe_LocalImageEngine_nativeGenerateBatch(
   }
   return finished;
 }
+
+
+/**
+ * img2img: use a reference photo as *actual* diffusion input rather than
+ * adding its description to text. 1-4 sequential outputs per model load.
+ * This encourages consistency but is NOT face-ID locking / PhotoMaker.
+ *
+ * Source reference ARGB pixels are copied from Java into an RGB buffer.
+ * CPU inference stays on the phone. Caller must hold a single worker thread.
+ */
+extern "C" JNIEXPORT jint JNICALL
+Java_studio_realframe_LocalImageEngine_nativeReferenceBatch(
+    JNIEnv* env, jclass,
+    jstring j_model,jstring j_prompt,jstring j_negative,
+    jint width,jint height,jint steps,jlong seed,jint threads,
+    jint batchCount,jintArray referenceARGB,jfloat strength,jobject sink) {
+  if(width<64 || width>1024 || height<64 || height>1024 ||
+      width%64 || height%64 || steps<1 || steps>100 ||
+      seed<1 || seed>2147483647LL || threads<1 || threads>8 ||
+      batchCount<1 || batchCount>8 || strength<0.1f || strength>0.95f ||
+      !referenceARGB || !sink) {
+    javaError(env,"Invalid reference image settings: strength 0.10-0.95");
+    return 0;
+  }
+  const size_t count=static_cast<size_t>(width)*height;
+  if(env->GetArrayLength(referenceARGB)!=static_cast<jsize>(count)){
+    javaError(env,"Reference photo size must match image generation resolution");
+    return 0;
+  }
+  auto model=asText(env,j_model), prompt=asText(env,j_prompt),
+       negative=asText(env,j_negative);
+  if(model.empty()||prompt.empty()){
+    javaError(env,"Model and prompt required");
+    return 0;
+  }
+  Slot slot;
+  if(!slot.owned){
+    javaError(env,"Another local AI job is using the model");
+    return 0;
+  }
+  jclass klass=env->GetObjectClass(sink);
+  if(!klass)return 0;
+  jmethodID onFrame=env->GetMethodID(klass,"onFrame","(I[I)V");
+  env->DeleteLocalRef(klass);
+  if(!onFrame)return 0;
+  std::vector<jint> original(count);
+  env->GetIntArrayRegion(referenceARGB,0,static_cast<jsize>(count),original.data());
+  if(env->ExceptionCheck())return 0;
+  std::vector<uint8_t> rgb(count*3);
+  for(size_t i=0;i<count;i++){
+    uint32_t color=static_cast<uint32_t>(original[i]);
+    rgb[3*i]=static_cast<uint8_t>((color>>16)&255);
+    rgb[3*i+1]=static_cast<uint8_t>((color>>8)&255);
+    rgb[3*i+2]=static_cast<uint8_t>(color&255);
+  }
+  original.clear();
+  sd_ctx_params_t config{};
+  sd_ctx_params_init(&config);
+  config.model_path=model.c_str();
+  config.n_threads=static_cast<int>(threads);
+  config.enable_mmap=true;
+  sd_ctx_t* ptr=new_sd_ctx(&config);
+  if(!ptr) {
+    javaError(env,"Reference AI model could not load. Check format and free RAM.");
+    return 0;
+  }
+  Scope scope(ptr);
+  {
+    std::lock_guard<std::mutex> lock(g_mutex);
+    g_active=ptr;
+    if(g_cancel_requested.load())sd_cancel_generation(ptr,SD_CANCEL_ALL);
+  }
+  if(!sd_ctx_supports_image_generation(ptr)){
+    javaError(env,"This checkpoint cannot generate SD still images");
+    return 0;
+  }
+  sd_image_t reference{};
+  reference.width=static_cast<uint32_t>(width);
+  reference.height=static_cast<uint32_t>(height);
+  reference.channel=3;
+  reference.data=rgb.data();
+  int completed=0;
+  for(int imageIndex=0;imageIndex<batchCount;imageIndex++){
+    if(g_cancel_requested.load())break;
+    sd_img_gen_params_t params{};
+    sd_img_gen_params_init(&params);
+    params.prompt=prompt.c_str();
+    params.negative_prompt=negative.c_str();
+    params.init_image=reference;
+    params.strength=strength; // 0.25 preserves more; 0.7 changes more.
+    params.width=width;params.height=height;
+    params.seed=1+static_cast<int64_t>(
+      (static_cast<uint64_t>(seed-1)+
+       static_cast<uint64_t>(imageIndex)*104729ULL)%2147483647ULL);
+    params.batch_count=1;
+    params.sample_params.sample_steps=steps;
+    sd_image_generation_result_t* result=nullptr;
+    bool ok=generate_image(ptr,&params,&result);
+    if(!ok||!result||result->count!=1||!result->items||
+       !result->items[0].image.data){
+      if(result)free_sd_image_generation_result(result);
+      if(g_cancel_requested.load())return completed;
+      javaError(env,"Reference diffusion failed. Reduce resolution/steps, or try a compatible SD1.5 model.");
+      return completed;
+    }
+    const sd_image_t &im=result->items[0].image;
+    if(im.width!=static_cast<uint32_t>(width)||
+       im.height!=static_cast<uint32_t>(height)||
+       (im.channel!=3&&im.channel!=4)){
+      free_sd_image_generation_result(result);
+      javaError(env,"Reference diffusion returned unexpected output format");
+      return completed;
+    }
+    std::vector<jint> pixels(count);
+    for(size_t i=0;i<count;i++){
+      const uint8_t* p=im.data+static_cast<size_t>(im.channel)*i;
+      pixels[i]=static_cast<jint>(0xFF000000u|
+       (uint32_t(p[0])<<16)|(uint32_t(p[1])<<8)|uint32_t(p[2]));
+    }
+    free_sd_image_generation_result(result);
+    jintArray returned=env->NewIntArray(static_cast<jsize>(count));
+    if(!returned)return completed;
+    env->SetIntArrayRegion(returned,0,static_cast<jsize>(count),pixels.data());
+    if(!env->ExceptionCheck())env->CallVoidMethod(sink,onFrame,static_cast<jint>(imageIndex),returned);
+    env->DeleteLocalRef(returned);
+    if(env->ExceptionCheck())return completed;
+    ++completed;
+  }
+  return completed;
+}
