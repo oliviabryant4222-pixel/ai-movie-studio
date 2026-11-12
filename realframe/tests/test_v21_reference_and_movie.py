@@ -47,7 +47,7 @@ class VisualContinuityTests(unittest.TestCase):
             else:
                 self.assertIn(word,source)
         self.assertIn("keyframe",source.lower())
-        self.assertIn("NOT",source)
+        self.assertIn("not a true motion-diffusion video model",source.lower())
     def test_photo_movie_is_offline_h264_with_smooth_camera_motion(self):
         source=(J/"StoryMovieComposerActivity.java").read_text()
         for word in ("ACTION_OPEN_DOCUMENT","EXTRA_ALLOW_MULTIPLE","new LocalVideoEncoder(",
