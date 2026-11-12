@@ -58,8 +58,8 @@ class OfflineVideoPipelineTests(unittest.TestCase):
         names=[a.get(ns+"name") for a in doc.find("application").findall("activity")]
         self.assertIn(".LocalVideoActivity",names)
         gradle=(APP/"build.gradle.kts").read_text()
-        self.assertTrue("studio.realframe.v18" in gradle or "studio.realframe.v19" in gradle)
-        self.assertTrue('versionName = "1.8.0-local-video-experimental"' in gradle or 'versionName = "1.9.0-local-online-hybrid-beta"' in gradle)
+        self.assertTrue("studio.realframe.v18" in gradle or "studio.realframe.v19" in gradle or "studio.realframe.v20" in gradle)
+        self.assertTrue('versionName = "1.8.0-local-video-experimental"' in gradle or 'versionName = "1.9.0-local-online-hybrid-beta"' in gradle or 'versionName = "2.0.0-one-tap-local-ai-beta"' in gradle)
 
 if __name__=="__main__":
     unittest.main()
