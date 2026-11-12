@@ -183,6 +183,7 @@ public final class StudioDashboardActivity extends Activity {
         heading("Offline workspace","Available without internet or a cloud account");
         LinearLayout offline=card(content,CARD);
         tile(offline,"◈","Photo Lab","Enhance a photo and export JPG offline",CYAN,()->open(OfflinePhotoLabActivity.class));
+        tile(offline,"▧","Still Image → MP4","Make a silent video clip offline, no AI motion",CYAN,()->open(OfflineImageVideoActivity.class));
         tile(offline,"▤","Clip Timeline","Import, arrange and join matching MP4s",ACCENT,()->advanced("Clips"));
         tile(offline,"◷","Storyboard & batch queue","Plan long videos and manage queued jobs",0xFFFFC582,()->advanced("Storyboard"));
         LinearLayout banner=card(content,0xFF223047);
