@@ -12,7 +12,7 @@ An Android beta with a redesigned dark interface and **two distinct modes**.
 
 ## OFFLINE: local photo tools + video editing (working)
 - **Offline Photo Lab**: pick an existing image, live-preview brightness/contrast/saturation adjustments, export JPG to `Pictures/RealFrameStudio` without network.
-- **Clip Timeline**: import compatible MP4s, reorder them and concatenate using Android MediaExtractor/MediaMuxer to `Movies/RealFrameStudio`.
+- **Still Image → MP4**: turn an existing photo into a silent 2–14-second still-video locally using Media3 Transformer. Exports to Movies/RealFrameStudio and adds it to your clips. No AI-generated motion.\n- **Clip Timeline**: import compatible MP4s, reorder them and concatenate using Android MediaExtractor/MediaMuxer to `Movies/RealFrameStudio`.
 - **Characters**: store descriptive profiles and reference URIs; **Storyboard**: create projects; **Jobs**: queue management.
 - Local photo adjustment and video joins are **not generative AI**.
 - Native text-to-image and text/image-to-video **do not yet run offline in RealFrame**. The app does not bundle Snapdragon/QNN inference binaries, model files, or a native diffusion renderer.
