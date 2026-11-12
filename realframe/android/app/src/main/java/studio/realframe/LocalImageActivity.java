@@ -123,6 +123,14 @@ public final class LocalImageActivity extends Activity {
         prompt=input(form,"Image prompt","Photorealistic portrait of a fictional adult, natural sunlight, realistic skin and hair, documentary photography");
         negative=input(form,"Negative prompt","watermark, jpeg artifacts, blurry, plastic texture");
         seed=input(form,"Seed (integer)","13901");
+        if(getIntent()!=null){
+            String incoming=getIntent().getStringExtra("prompt");
+            if(incoming!=null&&!incoming.isEmpty())prompt.setText(incoming);
+            incoming=getIntent().getStringExtra("negative");
+            if(incoming!=null)negative.setText(incoming);
+            incoming=getIntent().getStringExtra("seed");
+            if(incoming!=null&&!incoming.isEmpty())seed.setText(incoming);
+        }
         resolution=options(form,"Resolution (CPU preview)",new String[]{"256 × 256","384 × 384","512 × 512"});
         stepList=options(form,"Sampling steps",new String[]{"4","8","12","20"});
         batchList=options(form,"Local batch (sequential, one model load)",new String[]{"1","2","3","4"});
