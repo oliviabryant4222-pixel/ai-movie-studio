@@ -96,7 +96,7 @@ public final class StudioDashboardActivity extends Activity {
     private void engineInfo(){
         new AlertDialog.Builder(this)
             .setTitle("Offline image engine — experimental")
-            .setMessage("This build includes a CPU-only stable-diffusion.cpp image inference library. Import a compatible SD checkpoint first; CPU diffusion can be extremely slow or exhaust phone RAM. Qualcomm QNN/NPU acceleration and native offline video inference remain unavailable.")
+            .setMessage("This build includes native CPU stable-diffusion.cpp for local image generation AND an experimental Wan T2V video bridge. The app does not include model weights. Wan requires several components and may not fit in your phone RAM. Qualcomm QNN/NPU acceleration is not integrated.")
             .setPositiveButton("Got it",null).show();
     }
     @Override public void onCreate(Bundle b){
@@ -118,7 +118,7 @@ public final class StudioDashboardActivity extends Activity {
         put(name,label("REALFRAME",21,WHITE,true));
         put(name,label("AI  /  MOVIE STUDIO",11,MUTED,true));
         top.addView(name,new LinearLayout.LayoutParams(0,-2,1));
-        TextView badge=label("BETA 1.7",11,CYAN,true);
+        TextView badge=label("BETA 1.8",11,CYAN,true);
         badge.setGravity(Gravity.CENTER);badge.setBackground(shape(0xFF172C37,12));
         top.addView(badge,new LinearLayout.LayoutParams(dp(88),dp(35)));
         shell.addView(top);
@@ -191,6 +191,7 @@ public final class StudioDashboardActivity extends Activity {
         heading("On-device generation & editing","Experimental local AI, no cloud upload");
         LinearLayout localAi=card(content,CARD);
         tile(localAi,"◉","LOCAL AI Image Batch (CPU beta)","Generate 1–4 images; reuse one loaded model",CYAN,()->open(LocalImageActivity.class));
+        tile(localAi,"▶","LOCAL AI Video (Wan CPU lab)","T2V inference + MP4 encoding; 3 model files required",0xFFFFC582,()->open(LocalVideoActivity.class));
         heading("Offline workspace","Available without internet or a cloud account");
         LinearLayout offline=card(content,CARD);
         tile(offline,"◈","Photo Lab","Enhance a photo and export JPG offline",CYAN,()->open(OfflinePhotoLabActivity.class));
@@ -201,7 +202,7 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout banner=card(content,0xFF223047);
         put(banner,label("LOCAL AI MODEL STATUS",12,0xFFF5CE8E,true));
         gap(banner,7);
-        put(banner,label("CPU text-to-image available with a supported imported model. No bundled model weights. Offline video AI and Snapdragon NPU acceleration are not included.",13,WHITE,false));
+        put(banner,label("Native CPU image generation and experimental Wan CPU video inference included, but both need separate licensed model weights. Local video on 12GB RAM is NOT validated; Snapdragon NPU acceleration unavailable.",13,WHITE,false));
         gap(banner,10);
         TextView detail=label("View engine requirements  →",13,CYAN,true);
         detail.setOnClickListener(v->engineInfo());put(banner,detail);
@@ -225,6 +226,7 @@ public final class StudioDashboardActivity extends Activity {
         tile(creator,"✦","Unified Creator","Choose Local mode and use a character preset",ACCENT,()->open(UnifiedCreateActivity.class));
         LinearLayout mode=card(content,CARD);
         tile(mode,"◉","Local AI Image Batch (CPU beta)","1–4 images, automatically saved to gallery",CYAN,()->open(LocalImageActivity.class));
+        tile(mode,"▶","Local AI VIDEO (Wan CPU lab)","Real local diffusion video; device feasibility unknown",0xFFFFC582,()->open(LocalVideoActivity.class));
         tile(mode,"◈","Photo Lab","Adjust brightness, contrast & saturation; save JPG",CYAN,()->open(OfflinePhotoLabActivity.class));
         tile(mode,"▧","Still Image → MP4","Export a silent video from a photo",CYAN,()->open(OfflineImageVideoActivity.class));
         tile(mode,"▤","Clip Timeline","Import video clips and merge into MP4",ACCENT,()->advanced("Clips"));
@@ -234,7 +236,7 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout status=card(content,0xFF30263A);
         put(status,label("LOCAL TEXT-TO-IMAGE: EXPERIMENTAL",13,0xFFFFC582,true));
         gap(status,9);
-        put(status,label("Native CPU stable-diffusion.cpp is included, but images need a compatible downloaded model and may be slow or OOM. This CPU pipeline has not been benchmarked on your Samsung. Offline AI video is not available.",13,WHITE,false));
+        put(status,label("Local image and experimental Wan text-to-video use stable-diffusion.cpp on phone CPU. Video needs 3 large components and may not fit in RAM. No Samsung device inference benchmark or NPU acceleration yet.",13,WHITE,false));
         gap(status,11);
         TextView info=label("Why? See hardware + model requirements  →",13,CYAN,true);
         info.setOnClickListener(v->engineInfo());put(status,info);
@@ -259,6 +261,7 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout mode=card(content,CARD);
         tile(mode,"⇄","Choose local or online image","One prompt + smart routing; cloud consent required",CYAN,()->open(UnifiedCreateActivity.class));
         tile(mode,"◉","Local AI Image (CPU beta)","Runs on-device after model import",CYAN,()->open(LocalImageActivity.class));
+        tile(mode,"▶","Local AI VIDEO (Wan CPU lab)","Experimental on-device diffusion + MP4",0xFFFFC582,()->open(LocalVideoActivity.class));
         tile(mode,"✦","Generate online image","Remote image model; free provider quota",ACCENT,()->online("image"));
         tile(mode,"▶","Generate online video","Remote model; free provider quota",CYAN,()->online("video"));
         tile(mode,"▧","Offline image → MP4","Turn a saved still photo into an MP4 without AI",CYAN,()->open(OfflineImageVideoActivity.class));
@@ -268,7 +271,7 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout status=card(content,0xFF30263A);
         put(status,label("WHAT HYBRID DOES TODAY",13,0xFFFFC582,true));
         gap(status,9);
-        put(status,label("Manual hybrid: choose where an image is generated. Local uses the phone CPU with a downloaded model; online uses a provider. Automatic routing and automatic online fallback are not supported. Offline AI video remains unavailable.",13,WHITE,false));
+        put(status,label("Choose real local CPU image/video or provider-hosted online generation. Hybrid routes only when models are configured and RAM appears sufficient; cloud processing always requires your permission. Local Wan video may fail on mobile RAM.",13,WHITE,false));
     }
 
 }
