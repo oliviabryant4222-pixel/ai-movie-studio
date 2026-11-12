@@ -12,6 +12,7 @@
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity android:name=".WebStudioActivity" android:exported="false"/>
         <activity android:name=".OfflinePhotoLabActivity" android:exported="false"/>
+        <activity android:name=".OfflineImageVideoActivity" android:exported="false"/>
         <activity android:name=".MainActivity" android:exported="false"/>
         <activity android:name=".StudioDashboardActivity" android:exported="true">
             <intent-filter>
