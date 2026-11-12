@@ -4,12 +4,25 @@
 #include <vector>
 #include <mutex>
 #include <algorithm>
+#include <atomic>
 #include "stable-diffusion.h"
 #include <android/log.h>
 
 namespace {
 std::mutex g_mutex;
 sd_ctx_t *g_active = nullptr;
+// Reject concurrent model loading too, before a context is registered as active.
+std::atomic<bool> g_busy{false};
+std::atomic<bool> g_cancel_requested{false};
+struct Slot {
+  bool owned = false;
+  Slot() {
+    bool expected = false;
+    owned = g_busy.compare_exchange_strong(expected, true);
+    if(owned)g_cancel_requested.store(false);
+  }
+  ~Slot(){if(owned)g_busy.store(false);}
+};
 void javaError(JNIEnv* env, const std::string& message) {
   jclass klass = env->FindClass("java/lang/IllegalStateException");
   if (klass) env->ThrowNew(klass, message.c_str());
@@ -42,6 +55,7 @@ Java_studio_realframe_LocalImageEngine_nativeVersion(JNIEnv* env, jclass) {
 
 extern "C" JNIEXPORT void JNICALL
 Java_studio_realframe_LocalImageEngine_nativeCancel(JNIEnv* env, jclass) {
+  g_cancel_requested.store(true);
   std::lock_guard<std::mutex> lock(g_mutex);
   if(g_active) sd_cancel_generation(g_active, SD_CANCEL_ALL);
 }
@@ -65,7 +79,8 @@ Java_studio_realframe_LocalImageEngine_nativeGenerate(
   }
   auto model=asText(env,j_model), prompt=asText(env,j_prompt), negative=asText(env,j_negative);
   if (model.empty() || prompt.empty()) { javaError(env,"Model and prompt required"); return nullptr; }
-
+  Slot slot;
+  if(!slot.owned) {javaError(env,"A local AI model is already loading or generating.");return nullptr;}
   sd_ctx_params_t config{};
   sd_ctx_params_init(&config);
   config.model_path=model.c_str();
