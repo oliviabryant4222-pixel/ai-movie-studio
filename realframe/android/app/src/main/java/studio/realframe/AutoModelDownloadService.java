@@ -212,7 +212,10 @@ public final class AutoModelDownloadService extends Service {
             file.getFD().sync();
         }
         if(cancel.get())throw new InterruptedException("Download paused");
-        if(total>0&&part.length()!=total)
+        // Some HTTPS/Xet CDN responses use chunked transfer with unknown
+        // Content-Length. In that case the expected SHA-256 (below), not the
+        // UI's approximate 1.75 GB counter, is the authoritative integrity test.
+        if(expected>0&&part.length()!=existing+expected)
             throw new IllegalStateException("Model file is incomplete; tap install to resume");
         update("verifying","Verifying model SHA-256. Keep RealFrame open.");
         MessageDigest digest=MessageDigest.getInstance("SHA-256");
