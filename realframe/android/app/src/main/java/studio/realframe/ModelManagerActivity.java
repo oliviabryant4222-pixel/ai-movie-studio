@@ -134,9 +134,10 @@ public final class ModelManagerActivity extends Activity {
         gap(nativeCard,8);
         message(nativeCard,"A Snapdragon processor and model file alone do not generate images. A matching SDXL/SD1.5 native runtime with Qualcomm QNN or MNN integration must be compiled into this APK.");
         engineStatus=label("",14,ACCENT,true);gap(nativeCard,8);nativeCard.addView(engineStatus);
+        button(nativeCard,"Open local AI image renderer",()->startActivity(new Intent(this,LocalImageActivity.class)));
         button(nativeCard,"Read compatibility details",()->new AlertDialog.Builder(this)
             .setTitle("What does fully local require?")
-            .setMessage("To make photorealistic images offline, RealFrame must integrate an open-source compatible model runtime (e.g. MNN/QNN), include or download legally redistributable model packs, and connect a tokenizer, scheduler, UNet/DiT and VAE pipeline. For video it needs a separate motion diffusion runtime and many GB of storage. None of these are in the current APK. Hybrid cloud demos can already generate under quota.")
+            .setMessage("RealFrame now builds stable-diffusion.cpp as an arm64 CPU-native engine and includes a local single-file image checkpoint importer. It does not bundle multi-GB model weights. Qualcomm NPU acceleration is NOT configured and offline video diffusion is NOT available. Use Local AI Image for a compatible checkpoint; the file reference in this manager alone does not activate a model. Cloud demos remain quota-limited.")
             .setPositiveButton("OK",null).show());
 
         LinearLayout device=card("Device capability");
