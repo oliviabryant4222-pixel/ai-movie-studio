@@ -41,7 +41,7 @@ public final class WebStudioActivity extends Activity {
     private Button action(String label, LinearLayout row, View.OnClickListener callback) {
         Button button = new Button(this);
         button.setText(label);
-        button.setTextAllCaps(false);
+        button.setAllCaps(false);
         button.setOnClickListener(callback);
         row.addView(button, new LinearLayout.LayoutParams(0, -2, 1));
         return button;
