@@ -4,11 +4,11 @@ android {
     namespace = "studio.realframe"
     compileSdk = 35
     defaultConfig {
-        applicationId = "studio.realframe.v14"
+        applicationId = "studio.realframe.v15"
         minSdk = 29
         targetSdk = 35
-        versionCode = 14
-        versionName = "1.4.0-beta"
+        versionCode = 15
+        versionName = "1.5.0-beta"
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
