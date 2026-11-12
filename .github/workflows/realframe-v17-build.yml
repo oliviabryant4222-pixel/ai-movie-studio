@@ -41,6 +41,12 @@ jobs:
           mkdir -p /tmp/realframe-hybrid-policy-tests
           javac -d /tmp/realframe-hybrid-policy-tests android/app/src/main/java/studio/realframe/HybridRoutePolicy.java tests/TestHybridRoutePolicy.java
           java -cp /tmp/realframe-hybrid-policy-tests TestHybridRoutePolicy
+      - name: Checkpoint container validation tests (pure Java)
+        working-directory: realframe
+        run: |
+          mkdir -p /tmp/realframe-model-inspector-tests
+          javac -d /tmp/realframe-model-inspector-tests android/app/src/main/java/studio/realframe/ModelFileInspector.java tests/TestModelFileInspector.java
+          java -cp /tmp/realframe-model-inspector-tests TestModelFileInspector
       - name: Install Gradle 8.9
         uses: gradle/actions/setup-gradle@v4
         with:
