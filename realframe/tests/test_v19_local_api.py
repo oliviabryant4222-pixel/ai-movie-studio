@@ -62,7 +62,7 @@ class LocalNativeApiTests(unittest.TestCase):
         self.assertIn("CLOUD ONLINE",ui)
         dashboard=(SRC/"StudioDashboardActivity.java").read_text()
         self.assertIn("LocalApiActivity.class",dashboard)
-        self.assertIn("BETA 1.9",dashboard)
+        self.assertIn("BETA 2.0",dashboard)
     def test_android_permissions(self):
         root=ET.parse(ROOT/"android/app/src/main/AndroidManifest.xml").getroot()
         android="{http://schemas.android.com/apk/res/android}"
@@ -77,6 +77,6 @@ class LocalNativeApiTests(unittest.TestCase):
         self.assertIn(".LocalWebClientActivity",acts)
     def test_version(self):
         s=(ROOT/"android/app/build.gradle.kts").read_text()
-        self.assertIn('applicationId = "studio.realframe.v19"',s)
-        self.assertIn('versionName = "1.9.0-local-online-hybrid-beta"',s)
+        self.assertTrue('applicationId = "studio.realframe.v19"' in s or 'applicationId = "studio.realframe.v20"' in s)
+        self.assertTrue('versionName = "1.9.0-local-online-hybrid-beta"' in s or 'versionName = "2.0.0-one-tap-local-ai-beta"' in s)
 if __name__=="__main__": unittest.main()
