@@ -118,7 +118,7 @@ public final class StudioDashboardActivity extends Activity {
         put(name,label("REALFRAME",21,WHITE,true));
         put(name,label("AI  /  MOVIE STUDIO",11,MUTED,true));
         top.addView(name,new LinearLayout.LayoutParams(0,-2,1));
-        TextView badge=label("BETA 1.9",11,CYAN,true);
+        TextView badge=label("BETA 2.0",11,CYAN,true);
         badge.setGravity(Gravity.CENTER);badge.setBackground(shape(0xFF172C37,12));
         top.addView(badge,new LinearLayout.LayoutParams(dp(88),dp(35)));
         shell.addView(top);
@@ -177,6 +177,9 @@ public final class StudioDashboardActivity extends Activity {
     }
     private void drawHome(){
         hero();
+        heading("ONE-TAP LOCAL AI SETUP","App installs the open-source image model automatically");
+        LinearLayout setup=card(content,CARD);
+        tile(setup,"✦","GET LOCAL AI READY","No manual AI files, apps, or API keys",CYAN,()->open(QuickStartActivity.class));
         heading("Create a new project","One prompt, local/online/hybrid modes and character presets");
         LinearLayout creator=card(content,CARD);
         tile(creator,"✦","UNIFIED CREATOR","New: intelligent routing + privacy consent",ACCENT,()->open(UnifiedCreateActivity.class));
@@ -194,7 +197,7 @@ public final class StudioDashboardActivity extends Activity {
         tile(modes,"☷","Model & Mode Manager","Register downloaded models; inspect local engine status",ACCENT,()->open(ModelManagerActivity.class));
         heading("On-device generation & editing","Experimental local AI, no cloud upload");
         LinearLayout localAi=card(content,CARD);
-        tile(localAi,"◉","LOCAL AI Image Batch (CPU beta)","Generate 1–4 images; reuse one loaded model",CYAN,()->open(LocalImageActivity.class));
+        tile(localAi,"◉","LOCAL AI Image Batch (CPU beta)","One-tap setup, then 1–4 on-device images",CYAN,()->open(LocalImageActivity.class));
         tile(localAi,"▶","LOCAL AI Video (Wan CPU lab)","T2V inference + MP4 encoding; 3 model files required",0xFFFFC582,()->open(LocalVideoActivity.class));
         heading("Offline workspace","Available without internet or a cloud account");
         LinearLayout offline=card(content,CARD);
@@ -213,6 +216,8 @@ public final class StudioDashboardActivity extends Activity {
     }
     private void drawOnline(){
         heading("Online: choose WHERE AI runs","Local CPU while connected, or hosted cloud AI");
+        LinearLayout setup=card(content,CARD);
+        tile(setup,"✦","Set up LOCAL AI in-app","One-time automatic model installation",CYAN,()->open(QuickStartActivity.class));
         LinearLayout device=card(content,CARD);
         tile(device,"◉","LOCAL AI while online","Native CPU engine on this phone; no prompt upload",CYAN,()->open(LocalApiActivity.class));
         tile(device,"📶","Local AI over private Wi-Fi","Access phone's native AI from another device on LAN",ACCENT,()->open(LocalApiActivity.class));
@@ -229,7 +234,9 @@ public final class StudioDashboardActivity extends Activity {
         tile(note,"↗","Open advanced connectors","Use optional configured APIs & job queue",CYAN,()->advanced("Settings"));
     }
     private void drawOffline(){
-        heading("Create offline","No cloud required for image inference if a model is imported");
+        heading("Create offline","No cloud required for image inference after one-time model setup");
+        LinearLayout setup=card(content,CARD);
+        tile(setup,"✦","ONE-TAP SETUP","RealFrame installs its local image model automatically",CYAN,()->open(QuickStartActivity.class));
         LinearLayout creator=card(content,CARD);
         tile(creator,"✦","Unified Creator","Choose Local mode and use a character preset",ACCENT,()->open(UnifiedCreateActivity.class));
         LinearLayout mode=card(content,CARD);
@@ -264,7 +271,9 @@ public final class StudioDashboardActivity extends Activity {
             .show();
     }
     private void drawHybrid(){
-        heading("Hybrid Studio","Manual model choice + privacy-first routing");
+        heading("Hybrid Studio","Local image AI + hosted online + privacy-first routing");
+        LinearLayout setup=card(content,CARD);
+        tile(setup,"✦","Install local model in-app","No model files to locate or move yourself",CYAN,()->open(QuickStartActivity.class));
         LinearLayout creator=card(content,CARD);
         tile(creator,"✦","Hybrid Create","Prompt, character, output, local/cloud selection",ACCENT,()->open(UnifiedCreateActivity.class));
         LinearLayout mode=card(content,CARD);
