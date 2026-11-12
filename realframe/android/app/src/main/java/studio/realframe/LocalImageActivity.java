@@ -250,6 +250,9 @@ public final class LocalImageActivity extends Activity {
         long seedValue;
         try{seedValue=Long.parseLong(seed.getText().toString().trim());}
         catch(Exception e){running.set(false);notifyUser("Seed must be an integer");refresh();return;}
+        if(seedValue<1||seedValue>2147483647L){
+            running.set(false);notifyUser("Seed must be from 1 to 2147483647");refresh();return;
+        }
         int[] sizes={256,384,512};
         int width=sizes[resolution.getSelectedItemPosition()];
         int steps=Integer.parseInt(stepList.getSelectedItem().toString());
