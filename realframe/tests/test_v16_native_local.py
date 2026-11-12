@@ -41,7 +41,7 @@ class NativeEngineWiringTests(unittest.TestCase):
         names=[a.get(ns+"name") for a in root.find("application").findall("activity")]
         self.assertIn(".LocalImageActivity",names)
         gradle=(APP/"build.gradle.kts").read_text()
-        self.assertTrue('versionName = "1.6.0-local-image-experimental"' in gradle or 'versionName = "1.7.0-hybrid-batch-beta"' in gradle or 'versionName = "1.8.0-local-video-experimental"' in gradle or 'versionName = "1.9.0-local-online-hybrid-beta"' in gradle)
+        self.assertTrue('versionName = "1.6.0-local-image-experimental"' in gradle or 'versionName = "1.7.0-hybrid-batch-beta"' in gradle or 'versionName = "1.8.0-local-video-experimental"' in gradle or 'versionName = "1.9.0-local-online-hybrid-beta"' in gradle or 'versionName = "2.0.0-one-tap-local-ai-beta"' in gradle)
         self.assertIn("externalNativeBuild",gradle)
         self.assertIn('abiFilters.add("arm64-v8a")',gradle)
     def test_hybrid_requires_explicit_cloud_choice(self):
