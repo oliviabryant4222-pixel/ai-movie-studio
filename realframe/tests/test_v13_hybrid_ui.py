@@ -14,7 +14,7 @@ class HybridUiWiringTests(unittest.TestCase):
         self.assertIn('online("video")', text)
         self.assertIn("OfflinePhotoLabActivity.class", text)
         self.assertIn("OfflineImageVideoActivity.class",text)
-        self.assertIn("offline ai generation is not installed", text.lower().replace("native ", ""))
+        self.assertIn("local text-to-image: experimental", text.lower().replace("native ", ""))
     def test_offline_photo_lab_exports_gallery_image(self):
         text = (MAIN/"OfflinePhotoLabActivity.java").read_text()
         for token in ["ACTION_OPEN_DOCUMENT", "ColorMatrixColorFilter", "MediaStore.Images.Media.EXTERNAL_CONTENT_URI", "image/jpeg", "IS_PENDING"]:
