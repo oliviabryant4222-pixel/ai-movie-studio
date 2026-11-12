@@ -4,11 +4,19 @@ android {
     namespace = "studio.realframe"
     compileSdk = 35
     defaultConfig {
-        applicationId = "studio.realframe.v15"
+        applicationId = "studio.realframe.v16"
         minSdk = 29
         targetSdk = 35
-        versionCode = 15
-        versionName = "1.5.0-beta"
+        versionCode = 16
+        versionName = "1.6.0-local-image-experimental"
+        ndk { abiFilters.add("arm64-v8a") }
+    }
+    ndkVersion = "27.2.12479018"
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
