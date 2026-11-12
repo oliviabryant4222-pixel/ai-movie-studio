@@ -7,6 +7,9 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.ContentValues;
 import android.content.Intent;
+import android.content.pm.ServiceInfo;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
@@ -24,6 +27,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetAddress;
+import java.net.Inet4Address;
+import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -37,6 +42,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -62,7 +70,9 @@ public final class LocalApiService extends Service {
 
     private final AtomicBoolean activeJob=new AtomicBoolean(false);
     private final Map<String,Job> jobs=new ConcurrentHashMap<>();
-    private final ExecutorService clients=Executors.newFixedThreadPool(4);
+    // Bounded pending sockets: avoids unbounded memory from LAN floods.
+    private final ThreadPoolExecutor clients=new ThreadPoolExecutor(
+        2,4,20L,TimeUnit.SECONDS,new ArrayBlockingQueue<>(12));
     private final ExecutorService worker=Executors.newSingleThreadExecutor();
     private volatile boolean closing;
     private volatile ServerSocket socket;
@@ -136,15 +146,54 @@ public final class LocalApiService extends Service {
         boolean requestLan=intent!=null&&ACTION_START_LAN.equals(intent.getAction());
         // Never open the network accidentally after a system-initiated restart.
         if(intent==null)return START_NOT_STICKY;
-        startForeground(NOTIFICATION_ID,notification());
+        startForeground(NOTIFICATION_ID,notification(),ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
         if(running && lan==requestLan)return START_NOT_STICKY;
         restartSocket(requestLan);
         return START_NOT_STICKY;
+    }
+    private static String trustedWifiIPv4(){
+        try{
+            java.util.Enumeration<NetworkInterface> networks=NetworkInterface.getNetworkInterfaces();
+            while(networks!=null&&networks.hasMoreElements()){
+                NetworkInterface ni=networks.nextElement();
+                if(!ni.isUp()||ni.isLoopback())continue;
+                String name=ni.getName().toLowerCase(Locale.ROOT);
+                if(!(name.startsWith("wlan")||name.startsWith("wifi")||
+                     name.startsWith("swlan")||name.startsWith("ap0")))continue;
+                java.util.Enumeration<InetAddress> addrs=ni.getInetAddresses();
+                while(addrs.hasMoreElements()){
+                    InetAddress ip=addrs.nextElement();
+                    if(ip instanceof Inet4Address && ip.isSiteLocalAddress())
+                        return ip.getHostAddress();
+                }
+            }
+        }catch(Exception ignored){}
+        return null;
+    }
+    private static boolean privatePeer(InetAddress peer){
+        return peer!=null&&(peer.isLoopbackAddress()||
+            (peer instanceof Inet4Address && peer.isSiteLocalAddress()));
+    }
+    private static boolean knownHost(String raw,boolean sharing){
+        if(raw==null)return false;
+        String host=raw.toLowerCase(Locale.ROOT);
+        if(host.equals("127.0.0.1:"+PORT)||host.equals("localhost:"+PORT))return true;
+        String wifi=sharing?trustedWifiIPv4():null;
+        return wifi!=null&&host.equals(wifi+":"+PORT);
+    }
+    private boolean wifiConnected(){
+        try{
+            ConnectivityManager c=(ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
+            NetworkCapabilities caps=c.getNetworkCapabilities(c.getActiveNetwork());
+            return caps!=null&&caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+        }catch(Exception e){return false;}
     }
     private synchronized void restartSocket(boolean share){
         try{if(socket!=null)socket.close();}catch(Exception ignored){}
         closing=false;
         try{
+            if(share&&(!wifiConnected()||trustedWifiIPv4()==null))
+                throw new IllegalStateException("Trusted private Wi-Fi is required before LAN hosting");
             InetAddress address=InetAddress.getByName(share?"0.0.0.0":"127.0.0.1");
             ServerSocket opened=new ServerSocket(PORT,8,address);
             opened.setReuseAddress(true);
@@ -166,7 +215,12 @@ public final class LocalApiService extends Service {
             try {
                 Socket incoming=server.accept();
                 incoming.setSoTimeout(7_000);
-                clients.execute(()->serve(incoming));
+                if(!privatePeer(incoming.getInetAddress()) ||
+                   (!lan&&!incoming.getInetAddress().isLoopbackAddress())){
+                    incoming.close();continue;
+                }
+                try{clients.execute(()->serve(incoming));}
+                catch(java.util.concurrent.RejectedExecutionException busy){incoming.close();}
             }catch(Exception error){
                 if(!server.isClosed())android.util.Log.w("RealFrame","Local API connection failed",error);
                 if(server.isClosed())break;
@@ -247,6 +301,10 @@ public final class LocalApiService extends Service {
                 }
                 headers.put(key,header.substring(colon+1).trim());
             }
+            if(!knownHost(headers.get("host"),lan)){
+                error(output,400,"Host not allowed. Open this phone IP, not an external domain.");return;
+            }
+            // DNS rebinding defense: accept only explicit phone IP or localhost.
             if(headers.containsKey("transfer-encoding")){
                 error(output,400,"Chunked requests not supported");return;
             }
@@ -479,6 +537,10 @@ public final class LocalApiService extends Service {
             LocalImageEngine.cancel();LocalVideoEngine.cancel();
         }
         clients.shutdownNow();worker.shutdownNow();
+    }
+    @Override public void onTimeout(int startId,int fgsType){
+        // Android 15 limits dataSync foreground-service runtime.
+        shutdown();stopSelf(startId);
     }
     @Override public void onDestroy(){shutdown();super.onDestroy();}
     @Override public IBinder onBind(Intent intent){return null;}
