@@ -50,7 +50,7 @@ def main() -> None:
 
     base = ANDROID/'app/src/main/java/studio/realframe'
     required = ['MainActivity.java','RenderService.java','Renderer.java', 'StudioStore.java',
-                'SecretVault.java','ClipStitcher.java','MediaSignature.java', 'WebStudioActivity.java', 'StudioDashboardActivity.java', 'OfflinePhotoLabActivity.java']
+                'SecretVault.java','ClipStitcher.java','MediaSignature.java', 'WebStudioActivity.java', 'StudioDashboardActivity.java', 'OfflinePhotoLabActivity.java', 'OfflineImageVideoActivity.java']
     for name in required:
         path = base / name
         require(path.is_file(), f'Missing Java file: {name}')
