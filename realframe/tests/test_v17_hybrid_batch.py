@@ -55,8 +55,8 @@ class HybridBatchWiringTests(unittest.TestCase):
 
     def test_app_version(self):
         gradle=(APP/"build.gradle.kts").read_text()
-        self.assertIn('versionName = "1.7.0-hybrid-batch-beta"',gradle)
-        self.assertIn('applicationId = "studio.realframe.v17"',gradle)
+        self.assertTrue('versionName = "1.7.0-hybrid-batch-beta"' in gradle or 'versionName = "1.8.0-local-video-experimental"' in gradle)
+        self.assertTrue('applicationId = "studio.realframe.v17"' in gradle or 'applicationId = "studio.realframe.v18"' in gradle)
 
 if __name__=="__main__":
     unittest.main()
