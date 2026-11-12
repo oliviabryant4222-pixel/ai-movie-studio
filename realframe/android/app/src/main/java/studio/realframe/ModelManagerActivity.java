@@ -134,6 +134,8 @@ public final class ModelManagerActivity extends Activity {
         gap(nativeCard,8);
         message(nativeCard,"A Snapdragon processor and model file alone do not generate images. A matching SDXL/SD1.5 native runtime with Qualcomm QNN or MNN integration must be compiled into this APK.");
         engineStatus=label("",14,ACCENT,true);gap(nativeCard,8);nativeCard.addView(engineStatus);
+        button(nativeCard,"One-tap install AI model (no manual file)",()->
+            startActivity(new Intent(this,QuickStartActivity.class)));
         button(nativeCard,"Open local AI image renderer",()->startActivity(new Intent(this,LocalImageActivity.class)));
         button(nativeCard,"Read compatibility details",()->new AlertDialog.Builder(this)
             .setTitle("What does fully local require?")
