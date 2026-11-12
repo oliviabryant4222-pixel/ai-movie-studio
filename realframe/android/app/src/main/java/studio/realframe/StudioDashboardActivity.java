@@ -118,7 +118,7 @@ public final class StudioDashboardActivity extends Activity {
         put(name,label("REALFRAME",21,WHITE,true));
         put(name,label("AI  /  MOVIE STUDIO",11,MUTED,true));
         top.addView(name,new LinearLayout.LayoutParams(0,-2,1));
-        TextView badge=label("BETA 2.0",11,CYAN,true);
+        TextView badge=label("BETA 2.1",11,CYAN,true);
         badge.setGravity(Gravity.CENTER);badge.setBackground(shape(0xFF172C37,12));
         top.addView(badge,new LinearLayout.LayoutParams(dp(88),dp(35)));
         shell.addView(top);
@@ -195,6 +195,10 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout modes=card(content,CARD);
         tile(modes,"⇄","Hybrid Studio","Switch between online generation and offline post-production",CYAN,()->render("Hybrid"));
         tile(modes,"☷","Model & Mode Manager","Register downloaded models; inspect local engine status",ACCENT,()->open(ModelManagerActivity.class));
+        heading("Consistent characters & offline movies","Local AI reference editing and phone-only video creation");
+        LinearLayout continuity=card(content,CARD);
+        tile(continuity,"◇","REFERENCE CHARACTER AI","Actual local img2img conditioning with a selected photo",CYAN,()->open(ReferenceStudioActivity.class));
+        tile(continuity,"▶","MAKE CINEMATIC MP4 OFFLINE","Pan/zoom and transitions from AI images, no cloud",ACCENT,()->open(StoryMovieComposerActivity.class));
         heading("On-device generation & editing","Experimental local AI, no cloud upload");
         LinearLayout localAi=card(content,CARD);
         tile(localAi,"◉","LOCAL AI Image Batch (CPU beta)","One-tap setup, then 1–4 on-device images",CYAN,()->open(LocalImageActivity.class));
@@ -205,6 +209,7 @@ public final class StudioDashboardActivity extends Activity {
         tile(offline,"▧","Still Image → MP4","Make a silent video clip offline, no AI motion",CYAN,()->open(OfflineImageVideoActivity.class));
         tile(offline,"▤","Clip Timeline","Import, arrange and join matching MP4s",ACCENT,()->advanced("Clips"));
         tile(offline,"◷","Long-video planner","Plan 5-second clips + character continuity",0xFFFFC582,()->open(ProductionPlannerActivity.class));
+        tile(offline,"▶","Local cinematic movie","Animate generated images into a longer MP4",ACCENT,()->open(StoryMovieComposerActivity.class));
         tile(offline,"◉","Advanced batch queue","Monitor and retry configured render jobs",ACCENT,()->advanced("Jobs"));
         LinearLayout banner=card(content,0xFF223047);
         put(banner,label("LOCAL AI MODEL STATUS",12,0xFFF5CE8E,true));
@@ -241,10 +246,13 @@ public final class StudioDashboardActivity extends Activity {
         tile(creator,"✦","Unified Creator","Choose Local mode and use a character preset",ACCENT,()->open(UnifiedCreateActivity.class));
         LinearLayout mode=card(content,CARD);
         tile(mode,"◉","Local AI Image Batch (CPU beta)","1–4 images, automatically saved to gallery",CYAN,()->open(LocalImageActivity.class));
+        tile(mode,"◇","Reference Image AI","Use real input photo to guide new on-device AI images",CYAN,()->open(ReferenceStudioActivity.class));
+        tile(mode,"▶","Local Cinematic Movie Composer","Turn up to 16 AI pictures into crossfaded MP4",ACCENT,()->open(StoryMovieComposerActivity.class));
         tile(mode,"▶","Local AI VIDEO (Wan CPU lab)","Real local diffusion video; device feasibility unknown",0xFFFFC582,()->open(LocalVideoActivity.class));
         tile(mode,"▣","LOCAL Browser & API","Run local CPU AI while offline or connected to Internet",CYAN,()->open(LocalApiActivity.class));
         tile(mode,"◈","Photo Lab","Adjust brightness, contrast & saturation; save JPG",CYAN,()->open(OfflinePhotoLabActivity.class));
         tile(mode,"▧","Still Image → MP4","Export a silent video from a photo",CYAN,()->open(OfflineImageVideoActivity.class));
+        tile(mode,"▣","Reference-conditioned AI","Input photo + prompt for better visual continuity",CYAN,()->open(ReferenceStudioActivity.class));
         tile(mode,"▤","Clip Timeline","Import video clips and merge into MP4",ACCENT,()->advanced("Clips"));
         tile(mode,"◇","Characters & references","Store character recipes and appearance notes",0xFFFFC582,()->advanced("Characters"));
         tile(mode,"◷","Long-video planner","Export scene prompts and continuity graph",ACCENT,()->open(ProductionPlannerActivity.class));
@@ -279,11 +287,14 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout mode=card(content,CARD);
         tile(mode,"⇄","Choose local or online image","One prompt + smart routing; cloud consent required",CYAN,()->open(UnifiedCreateActivity.class));
         tile(mode,"◉","Local AI Image (CPU beta)","Runs on-device after model import",CYAN,()->open(LocalImageActivity.class));
+        tile(mode,"◇","Local Reference AI","Img2img from Gallery reference, privacy-preserving",CYAN,()->open(ReferenceStudioActivity.class));
+        tile(mode,"▶","Cinematic Photo Movie","Create actual H.264 MP4 offline from AI images",ACCENT,()->open(StoryMovieComposerActivity.class));
         tile(mode,"▶","Local AI VIDEO (Wan CPU lab)","Experimental on-device diffusion + MP4",0xFFFFC582,()->open(LocalVideoActivity.class));
         tile(mode,"▣","On-device Local API (online/offline)","Run phone-native model, no hosted GPU required",CYAN,()->open(LocalApiActivity.class));
         tile(mode,"✦","Generate online image","Remote image model; free provider quota",ACCENT,()->online("image"));
         tile(mode,"▶","Generate online video","Remote model; free provider quota",CYAN,()->online("video"));
         tile(mode,"▧","Offline image → MP4","Turn a saved still photo into an MP4 without AI",CYAN,()->open(OfflineImageVideoActivity.class));
+        tile(mode,"▶","Local Story Movie","Combine gallery AI shots with crossfades and camera movement",ACCENT,()->open(StoryMovieComposerActivity.class));
         tile(mode,"▤","Offline video assembler","Use downloaded/generated clips to create longer edits",ACCENT,()->advanced("Clips"));
         tile(mode,"◷","Long-video production","Plan scenes, characters, continuity, export manifest",0xFFFFC582,()->open(ProductionPlannerActivity.class));
         tile(mode,"☷","Model manager & preferences","Store model path and pick online, local or hybrid",0xFFFFC582,()->open(ModelManagerActivity.class));
