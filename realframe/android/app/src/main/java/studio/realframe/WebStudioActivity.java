@@ -37,35 +37,52 @@ public final class WebStudioActivity extends Activity {
     private ValueCallback<Uri[]> pendingFiles;
     private String currentSpace = IMAGE_SPACE;
 
+    private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
+    private android.graphics.drawable.GradientDrawable rounded(int c) {
+        android.graphics.drawable.GradientDrawable g = new android.graphics.drawable.GradientDrawable();
+        g.setColor(c);g.setCornerRadius(dp(12));return g;
+    }
     private void toast(String message) { Toast.makeText(this, message, Toast.LENGTH_LONG).show(); }
     private Button action(String label, LinearLayout row, View.OnClickListener callback) {
         Button button = new Button(this);
         button.setText(label);
         button.setAllCaps(false);
+        button.setTextColor(android.graphics.Color.WHITE);
+        button.setTextSize(12);
+        button.setBackground(rounded(0xFF403870));
+        button.setPadding(dp(4),dp(7),dp(4),dp(7));
         button.setOnClickListener(callback);
-        row.addView(button, new LinearLayout.LayoutParams(0, -2, 1));
+        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0, dp(44), 1);
+        lp.setMargins(dp(3),dp(4),dp(3),dp(5));
+        row.addView(button, lp);
         return button;
     }
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(8, 8, 8, 4);
+        getWindow().setStatusBarColor(0xFF0B1120); getWindow().setNavigationBarColor(0xFF0B1120);
+        root.setPadding(dp(10),dp(10),dp(10),dp(4)); root.setBackgroundColor(0xFF0B1120);
         TextView title = new TextView(this);
-        title.setText("REALFRAME · Free AI Studio v1.2");
+        title.setText("✦  REALFRAME  ·  ONLINE AI");
+        title.setTextColor(0xFFF6F7FD);
         title.setTextSize(19);
-        title.setPadding(8, 8, 4, 4);
+        title.setPadding(dp(8),dp(5),dp(4),dp(5));
         root.addView(title);
         TextView explainer = new TextView(this);
         explainer.setText("Image + video models inside the app. Cloud demo: internet required, free quotas apply. No Nightmare or API address/token. The model provider controls its own content rules.");
-        explainer.setTextSize(12);
-        explainer.setPadding(8, 4, 8, 8);
+        explainer.setTextSize(12); explainer.setTextColor(0xFFADB9CB);
+        explainer.setPadding(dp(8),dp(4),dp(8),dp(9));
         root.addView(explainer);
         prompt = new EditText(this);
         prompt.setHint("Write your AI prompt; tap Copy then paste in the generator below");
         prompt.setMinLines(2);
         prompt.setMaxLines(3);
-        root.addView(prompt);
+        prompt.setTextColor(0xFFF4F6FC);
+        prompt.setHintTextColor(0xFF9BA6BA);
+        prompt.setBackground(rounded(0xFF1A2840));
+        prompt.setPadding(dp(12),dp(9),dp(12),dp(9));
+        root.addView(prompt,new LinearLayout.LayoutParams(-1,dp(100)));
         LinearLayout firstRow = new LinearLayout(this);
         action("Copy prompt", firstRow, v -> {
             String value = prompt.getText().toString();
@@ -85,6 +102,7 @@ public final class WebStudioActivity extends Activity {
         action("Back to studio", secondRow, v -> finish());
         root.addView(secondRow);
         web = new WebView(this);
+        web.setBackgroundColor(0xFF101B2E);
         web.getSettings().setJavaScriptEnabled(true);
         web.getSettings().setDomStorageEnabled(true);
         web.getSettings().setAllowFileAccess(false);
