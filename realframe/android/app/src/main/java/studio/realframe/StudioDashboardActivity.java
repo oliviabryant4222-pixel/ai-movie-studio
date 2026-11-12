@@ -118,7 +118,7 @@ public final class StudioDashboardActivity extends Activity {
         put(name,label("REALFRAME",21,WHITE,true));
         put(name,label("AI  /  MOVIE STUDIO",11,MUTED,true));
         top.addView(name,new LinearLayout.LayoutParams(0,-2,1));
-        TextView badge=label("BETA 1.3",11,CYAN,true);
+        TextView badge=label("BETA 1.4",11,CYAN,true);
         badge.setGravity(Gravity.CENTER);badge.setBackground(shape(0xFF172C37,12));
         top.addView(badge,new LinearLayout.LayoutParams(dp(88),dp(35)));
         shell.addView(top);
@@ -133,8 +133,8 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout bottom=horizontal();
         bottom.setPadding(dp(8),dp(9),dp(8),dp(9));
         bottom.setBackgroundColor(0xFF11192A);
-        String[] items={"Home","Online","Offline","Vault","Editor"};
-        String[] icons={"⌂","✧","◈","◇","▤"};
+        String[] items={"Home","Online","Offline","Hybrid","Vault","Editor"};
+        String[] icons={"⌂","✧","◈","⇄","◇","▤"};
         for(int i=0;i<items.length;i++){
             final String next=items[i];
             LinearLayout tab=vertical();tab.setGravity(Gravity.CENTER);
@@ -156,6 +156,7 @@ public final class StudioDashboardActivity extends Activity {
         if("Home".equals(mode))drawHome();
         else if("Online".equals(mode))drawOnline();
         else if("Offline".equals(mode))drawOffline();
+        else if("Hybrid".equals(mode))drawHybrid();
     }
     private void hero(){
         LinearLayout hero=vertical();
@@ -165,11 +166,11 @@ public final class StudioDashboardActivity extends Activity {
         heroLp.topMargin=dp(14);content.addView(hero,heroLp);
         put(hero,label("YOUR CREATIVE WORKSPACE",11,0xFFC8E8FF,true));
         gap(hero,11);
-        put(hero,label("One studio.\nTwo creative modes.",30,WHITE,true));
+        put(hero,label("One studio.\nThree creative modes.",30,WHITE,true));
         gap(hero,9);
         put(hero,label("Generate online with available free quotas.\nEdit, manage and combine clips offline.",13,0xFFE0E5F4,false));
         gap(hero,15);
-        TextView chip=label("ONLINE  +  OFFLINE",12,0xFF101B2D,true);
+        TextView chip=label("ONLINE  •  OFFLINE  •  HYBRID",12,0xFF101B2D,true);
         chip.setGravity(Gravity.CENTER);
         chip.setBackground(shape(CYAN,10));
         hero.addView(chip,new LinearLayout.LayoutParams(dp(185),dp(37)));
@@ -180,6 +181,10 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout online=card(content,CARD);
         tile(online,"✦","AI Image Studio","Realistic portraits · prompts · downloads",ACCENT,()->online("image"));
         tile(online,"▶","AI Video Studio","Image-to-video · motion clips · online",CYAN,()->online("video"));
+        heading("Choose your processing mode","Online, offline editing, and hybrid project management");
+        LinearLayout modes=card(content,CARD);
+        tile(modes,"⇄","Hybrid Studio","Switch between online generation and offline post-production",CYAN,()->render("Hybrid"));
+        tile(modes,"☷","Model & Mode Manager","Register downloaded models; inspect local engine status",ACCENT,()->open(ModelManagerActivity.class));
         heading("Offline workspace","Available without internet or a cloud account");
         LinearLayout offline=card(content,CARD);
         tile(offline,"◈","Photo Lab","Enhance a photo and export JPG offline",CYAN,()->open(OfflinePhotoLabActivity.class));
@@ -221,4 +226,18 @@ public final class StudioDashboardActivity extends Activity {
         TextView info=label("Why? See hardware + model requirements  →",13,CYAN,true);
         info.setOnClickListener(v->engineInfo());put(status,info);
     }
+    private void drawHybrid(){
+        heading("Hybrid Studio","Generate online, edit offline and keep projects in one place");
+        LinearLayout mode=card(content,CARD);
+        tile(mode,"✦","Generate online image","Remote image model; free provider quota",ACCENT,()->online("image"));
+        tile(mode,"▶","Generate online video","Remote model; free provider quota",CYAN,()->online("video"));
+        tile(mode,"▧","Offline image → MP4","Turn a saved still photo into an MP4 without AI",CYAN,()->open(OfflineImageVideoActivity.class));
+        tile(mode,"▤","Offline video assembler","Use downloaded/generated clips to create longer edits",ACCENT,()->advanced("Clips"));
+        tile(mode,"☷","Model manager & preferences","Store model path and pick online, local or hybrid",0xFFFFC582,()->open(ModelManagerActivity.class));
+        LinearLayout status=card(content,0xFF30263A);
+        put(status,label("WHAT HYBRID DOES TODAY",13,0xFFFFC582,true));
+        gap(status,9);
+        put(status,label("Online AI generation and offline post-production are working paths. One-click automatic scheduling between local AI inference and cloud models is NOT implemented, because the current APK has no native on-device AI engine. Model files alone do not enable generation.",13,WHITE,false));
+    }
+
 }
