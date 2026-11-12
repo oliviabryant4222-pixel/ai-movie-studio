@@ -181,6 +181,7 @@ public final class LocalImageActivity extends Activity {
                     if(nameColumn>=0&&!c.isNull(nameColumn))filename=c.getString(nameColumn);
                 }
             }
+            if(filename==null || filename.trim().isEmpty())filename="model.safetensors";
             String ext=filename.toLowerCase(Locale.ROOT).endsWith(".gguf")?".gguf":
                 filename.toLowerCase(Locale.ROOT).endsWith(".safetensors")?".safetensors":
                 filename.toLowerCase(Locale.ROOT).endsWith(".ckpt")?".ckpt":null;
@@ -204,6 +205,11 @@ public final class LocalImageActivity extends Activity {
                     if(importCancelled||Thread.currentThread().isInterrupted())
                         throw new InterruptedException("Model import cancelled");
                     out.write(buffer,0,count);copied+=count;
+                    // A provider may report UNKNOWN file size. Ensure model import
+                    // never silently fills all phone storage.
+                    if(copied-lastUpdate>=32L*1024*1024 &&
+                       new StatFs(dir.getAbsolutePath()).getAvailableBytes()<250L*1024*1024)
+                        throw new IllegalStateException("Storage almost full; import aborted safely");
                     if(copied-lastUpdate>=32L*1024*1024){
                         lastUpdate=copied;
                         message("Importing model: "+(copied/(1024*1024))+" MB"+(bytes>0?" / "+bytes/(1024*1024)+" MB":""));
@@ -212,6 +218,9 @@ public final class LocalImageActivity extends Activity {
                 out.getFD().sync();
             }
             if(copied<8L*1024*1024)throw new IllegalArgumentException("Model file appears incomplete");
+            ModelFileInspector.Result inspection=ModelFileInspector.inspect(pending);
+            if(!inspection.plausible)
+                throw new IllegalArgumentException("Model header check failed: "+inspection.detail);
             File ready=new File(dir,"checkpoint_"+System.currentTimeMillis()+ext);
             if(!pending.renameTo(ready))throw new IllegalStateException("Could not activate imported model");
             String prior=modelPath();
@@ -220,7 +229,7 @@ public final class LocalImageActivity extends Activity {
                 File old=new File(prior);
                 if(old.getParentFile()!=null && old.getParentFile().equals(dir))old.delete();
             }
-            message("Checkpoint imported. Ready for local generation.");
+            message("Checkpoint imported ("+inspection.kind+"). Header plausible; native model compatibility still needs a real test.");
         }catch(Throwable e){
             if(pending!=null)pending.delete();
             message("Import failed: "+e.getMessage());
