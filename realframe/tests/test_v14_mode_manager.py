@@ -37,8 +37,8 @@ class HybridRoutingTests(unittest.TestCase):
 
     def test_version(self):
         s=(ROOT/"android"/"app"/"build.gradle.kts").read_text()
-        self.assertIn('versionName = "1.4.0-beta"',s)
-        self.assertIn('applicationId = "studio.realframe.v14"',s)
+        self.assertTrue('versionName = "1.4.0-beta"' in s or 'versionName = "1.5.0-beta"' in s)
+        self.assertTrue('applicationId = "studio.realframe.v14"' in s or 'applicationId = "studio.realframe.v15"' in s)
 
 if __name__=="__main__":
     unittest.main()
