@@ -178,6 +178,7 @@ public final class ProductionPlannerActivity extends Activity {
         return subject.getText().toString().trim();
     }
     private void build(){
+        try {
         String identity=selectedAppearance();
         if(identity.isEmpty())throw new IllegalArgumentException("Add a character description");
         String setting=scene.getText().toString().trim();
@@ -232,6 +233,9 @@ public final class ProductionPlannerActivity extends Activity {
             .putString("seed",seedText.getText().toString())
             .putString("plan",projectJson).apply();
         cursor=0;refresh();toast(number+" scenes planned; prompts ready.");
+        } catch (org.json.JSONException exception) {
+            throw new IllegalStateException("Could not create storyboard JSON", exception);
+        }
     }
     private JSONObject current(){
         JSONObject scene=plan.optJSONObject(cursor);
