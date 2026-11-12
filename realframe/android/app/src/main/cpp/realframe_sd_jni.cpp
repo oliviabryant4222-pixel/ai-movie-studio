@@ -364,3 +364,121 @@ Java_studio_realframe_LocalImageEngine_nativeReferenceBatch(
   }
   return completed;
 }
+
+
+/**
+ * Local AI storyboard pipeline: one SD model load, one scene per unique
+ * prompt, and previous AI keyframe as the next scene's img2img init image.
+ * Real diffusion for the keyframes; the Java client animates them using
+ * ordinary camera pan/zoom to create an MP4 (not true generated frame motion).
+ */
+extern "C" JNIEXPORT jint JNICALL
+Java_studio_realframe_LocalImageEngine_nativeStoryboard(
+    JNIEnv* env,jclass,
+    jstring j_model,jobjectArray j_scenes,jstring j_negative,
+    jint width,jint height,jint steps,jlong seed,jint threads,
+    jfloat continuityStrength,jobject sink) {
+  if(!j_scenes||!sink||width<64||width>768||height<64||height>768||
+     width%64||height%64||steps<1||steps>40||
+     seed<1||seed>2147483647LL||threads<1||threads>8||
+     continuityStrength<0.15f||continuityStrength>0.9f) {
+    javaError(env,"Invalid on-device storyboard parameters");return 0;
+  }
+  int scenes=env->GetArrayLength(j_scenes);
+  if(scenes<1||scenes>12){javaError(env,"Storyboard needs 1-12 short scenes");return 0;}
+  auto model=asText(env,j_model),negative=asText(env,j_negative);
+  if(model.empty()){javaError(env,"Local SD model not installed");return 0;}
+  std::vector<std::string> prompts;
+  prompts.reserve(scenes);
+  for(int i=0;i<scenes;i++){
+    jstring one=(jstring)env->GetObjectArrayElement(j_scenes,i);
+    std::string scene=asText(env,one);
+    if(one)env->DeleteLocalRef(one);
+    if(scene.empty()||scene.size()>4000){
+      javaError(env,"Empty or excessive storyboard scene description");return 0;
+    }
+    prompts.push_back(std::move(scene));
+  }
+  Slot slot;
+  if(!slot.owned){javaError(env,"Other local AI generation already in progress");return 0;}
+  jclass listenerClass=env->GetObjectClass(sink);
+  if(!listenerClass)return 0;
+  jmethodID onFrame=env->GetMethodID(listenerClass,"onFrame","(I[I)V");
+  env->DeleteLocalRef(listenerClass);
+  if(!onFrame)return 0;
+
+  sd_ctx_params_t context{};
+  sd_ctx_params_init(&context);
+  context.model_path=model.c_str();
+  context.n_threads=threads;
+  context.enable_mmap=true;
+  sd_ctx_t* engine=new_sd_ctx(&context);
+  if(!engine){javaError(env,"Could not load local SD model for storyboard");return 0;}
+  Scope guard(engine);
+  {
+    std::lock_guard<std::mutex> lock(g_mutex);
+    g_active=engine;
+    if(g_cancel_requested.load())sd_cancel_generation(engine,SD_CANCEL_ALL);
+  }
+  if(!sd_ctx_supports_image_generation(engine)){
+    javaError(env,"Selected model does not support local image generation");
+    return 0;
+  }
+  const size_t pixels=static_cast<size_t>(width)*height;
+  std::vector<uint8_t> previous; // RGB keyframe saved from prior scene.
+  int complete=0;
+  for(int scene=0;scene<scenes;scene++){
+    if(g_cancel_requested.load())break;
+    sd_img_gen_params_t params{};
+    sd_img_gen_params_init(&params);
+    params.prompt=prompts[scene].c_str();
+    params.negative_prompt=negative.c_str();
+    params.width=width;params.height=height;
+    params.batch_count=1;
+    params.sample_params.sample_steps=steps;
+    params.seed=seed; // lock same seed to support continuity.
+    sd_image_t reference{};
+    if(!previous.empty()){
+      reference.width=static_cast<uint32_t>(width);
+      reference.height=static_cast<uint32_t>(height);
+      reference.channel=3;
+      reference.data=previous.data();
+      params.init_image=reference;
+      params.strength=continuityStrength;
+    }
+    sd_image_generation_result_t* result=nullptr;
+    bool success=generate_image(engine,&params,&result);
+    if(!success||!result||result->count<1||!result->items||
+       !result->items[0].image.data){
+      if(result)free_sd_image_generation_result(result);
+      if(g_cancel_requested.load())return complete;
+      javaError(env,"Local storyboard diffusion failed on scene "+std::to_string(scene+1));
+      return complete;
+    }
+    const sd_image_t &frame=result->items[0].image;
+    if(frame.width!=static_cast<uint32_t>(width)||
+       frame.height!=static_cast<uint32_t>(height)||
+       (frame.channel!=3&&frame.channel!=4)){
+      free_sd_image_generation_result(result);
+      javaError(env,"Storyboard diffusion returned invalid image format");return complete;
+    }
+    std::vector<jint> packed(pixels);
+    previous.resize(pixels*3);
+    for(size_t i=0;i<pixels;i++){
+      const uint8_t *source=frame.data+static_cast<size_t>(frame.channel)*i;
+      previous[3*i]=source[0];previous[3*i+1]=source[1];previous[3*i+2]=source[2];
+      packed[i]=static_cast<jint>(0xFF000000u|
+       (uint32_t(source[0])<<16)|(uint32_t(source[1])<<8)|uint32_t(source[2]));
+    }
+    free_sd_image_generation_result(result);
+    jintArray argb=env->NewIntArray(static_cast<jsize>(pixels));
+    if(!argb)return complete;
+    env->SetIntArrayRegion(argb,0,static_cast<jsize>(pixels),packed.data());
+    if(!env->ExceptionCheck())
+      env->CallVoidMethod(sink,onFrame,static_cast<jint>(scene),argb);
+    env->DeleteLocalRef(argb);
+    if(env->ExceptionCheck())return complete;
+    complete++;
+  }
+  return complete;
+}
