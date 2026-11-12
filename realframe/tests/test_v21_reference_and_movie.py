@@ -40,7 +40,7 @@ class VisualContinuityTests(unittest.TestCase):
     def test_auto_film_is_genuine_ai_keyframes_plus_cinematic_animation(self):
         source=(J/"LocalAutoFilmActivity.java").read_text()
         for word in ("generateStoryboard(", "new LocalVideoEncoder(", "encoder[0].finish()",
-                     "appendAnimated(","same fictional adult", "getSharedPreferences(\"realframe_local_sd\"",
+                     "appendAnimated(","Same fictional adult", "getSharedPreferences(\"realframe_local_sd\"",
                      "Movie", "Photo"):
             if word == "Photo":
                 self.assertIn("ReferenceStudioActivity.class",source)
