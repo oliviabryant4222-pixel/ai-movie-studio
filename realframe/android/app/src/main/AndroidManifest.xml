@@ -11,6 +11,7 @@
         android:label="RealFrame AI Studio"
         android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <activity android:name=".LocalAutoFilmActivity" android:exported="false"/>
         <activity android:name=".StoryMovieComposerActivity" android:exported="false"/>
         <activity android:name=".ReferenceStudioActivity" android:exported="false"/>
         <activity android:name=".QuickStartActivity" android:exported="false"/>
