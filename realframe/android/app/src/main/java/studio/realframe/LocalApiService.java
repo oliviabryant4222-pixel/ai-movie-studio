@@ -92,6 +92,7 @@ public final class LocalApiService extends Service {
         final List<Uri> saved=new ArrayList<>();
         volatile String state="queued",error="";
         volatile int completed,total;
+        final AtomicBoolean cancelled=new AtomicBoolean(false);
         Job(String key,String kind,int total) {
             this.id=key;this.kind=kind;this.total=total;
         }
@@ -215,9 +216,7 @@ public final class LocalApiService extends Service {
         reply(out,status,obj);
     }
     private static boolean sameToken(String expected,String supplied){
-        byte[] a=expected.getBytes(StandardCharsets.US_ASCII);
-        byte[] b=supplied.getBytes(StandardCharsets.US_ASCII);
-        return MessageDigest.isEqual(a,b);
+        return LocalApiSecurity.matchesToken(expected,supplied);
     }
     private void serve(Socket connection){
         try(Socket conn=connection;
@@ -230,7 +229,7 @@ public final class LocalApiService extends Service {
             }
             String method=parts[0],path=parts[1];
             if(path.contains("?"))path=path.substring(0,path.indexOf('?'));
-            if(!path.startsWith("/")||path.contains("..")||path.length()>180){
+            if(!LocalApiSecurity.safePath(path)){
                 error(output,400,"Invalid path");return;
             }
             Map<String,String> headers=new java.util.HashMap<>();
@@ -256,7 +255,7 @@ public final class LocalApiService extends Service {
                 try{length=Integer.parseInt(headers.get("content-length"));}
                 catch(Exception ignored){error(output,400,"Bad Content-Length");return;}
             }
-            if(length<0||length>MAX_BODY){error(output,413,"JSON request too large");return;}
+            if(!LocalApiSecurity.acceptedBody(length,headers.containsKey("transfer-encoding"))){error(output,413,"JSON request too large");return;}
             if("GET".equals(method)&&"/".equals(path)){
                 response(output,200,"text/html; charset=utf-8",
                     LocalApiWebPage.html().getBytes(StandardCharsets.UTF_8));
@@ -306,6 +305,7 @@ public final class LocalApiService extends Service {
                     error(output,409,"Job already finished");return;
                 }
                 job.state="cancelling";
+                job.cancelled.set(true);
                 if("image".equals(job.kind))LocalImageEngine.cancel();
                 if("video".equals(job.kind))LocalVideoEngine.cancel();
                 reply(output,202,job.info());return;
@@ -407,6 +407,11 @@ public final class LocalApiService extends Service {
     }
     private void process(Job job,String prompt,String negative,int width,int height,
                          int steps,long seed,int count) {
+        if(job.cancelled.get()){
+            job.state="cancelled";
+            activeJob.set(false);
+            return;
+        }
         job.state="running";
         try{
             if("image".equals(job.kind)) {
@@ -470,7 +475,9 @@ public final class LocalApiService extends Service {
         closing=true;running=false;lan=false;
         try{if(socket!=null)socket.close();}catch(Exception ignored){}
         socket=null;
-        LocalImageEngine.cancel();LocalVideoEngine.cancel();
+        if(activeJob.get()) {
+            LocalImageEngine.cancel();LocalVideoEngine.cancel();
+        }
         clients.shutdownNow();worker.shutdownNow();
     }
     @Override public void onDestroy(){shutdown();super.onDestroy();}
