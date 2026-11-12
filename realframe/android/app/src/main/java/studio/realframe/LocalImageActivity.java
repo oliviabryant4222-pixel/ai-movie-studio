@@ -47,7 +47,7 @@ public final class LocalImageActivity extends Activity {
     private final AtomicBoolean running=new AtomicBoolean(false);
     private volatile boolean importCancelled=false;
     private EditText prompt,negative,seed;
-    private Spinner resolution,stepList;
+    private Spinner resolution,stepList,batchList;
     private TextView status,modelStatus,engineStatus;
     private ImageView preview;
     private Button generate,importModel;
@@ -125,8 +125,10 @@ public final class LocalImageActivity extends Activity {
         seed=input(form,"Seed (integer)","13901");
         resolution=options(form,"Resolution (CPU preview)",new String[]{"256 × 256","384 × 384","512 × 512"});
         stepList=options(form,"Sampling steps",new String[]{"4","8","12","20"});
+        batchList=options(form,"Local batch (sequential, one model load)",new String[]{"1","2","3","4"});
+        put(form,label("Each finished image saves automatically to Pictures/RealFrameStudio. Batch runs sequentially to conserve RAM; it is not parallel GPU processing.",12,MUTED,false));
         gap(form,11);
-        generate=button(form,"✦  GENERATE ON THIS DEVICE",this::generateImage,0xFF4A438E);
+        generate=button(form,"✦  GENERATE LOCAL IMAGE BATCH",this::generateImage,0xFF4A438E);
         button(form,"⏹  Cancel active local render",()->{importCancelled=true;LocalImageEngine.cancel();message("Cancellation requested; model loading may not stop immediately.");},0xFF4B3851);
         gap(form,10);
         status=label("Ready. Import a supported checkpoint and generate.",13,MUTED,false);
@@ -136,7 +138,7 @@ public final class LocalImageActivity extends Activity {
         preview.setBackground(shape(0xFF172135));
         form.addView(preview,new LinearLayout.LayoutParams(-1,dp(310)));
         gap(form,12);
-        button(form,"💾  Save generated image to Gallery",this::export,0xFF247F73);
+        button(form,"💾  Save preview image again",this::export,0xFF247F73);
         gap(form,9);
         put(form,label("CPU-only beta: image generation can be very slow, use lots of RAM, or fail for incompatible models. No QNN/NPU or offline video renderer is included. Keep the app open while sampling. Hosted generation is available separately under Online.",12,MUTED,false));
         refresh();
@@ -218,6 +220,12 @@ public final class LocalImageActivity extends Activity {
             running.set(false);runOnUiThread(this::refresh);
         }
     }
+
+    /**
+     * A single native context is kept alive across the selected batch. Every
+     * image is persisted in MediaStore before generating the next scene.
+     * Outputs from a cancelled/failed batch remain in Gallery.
+     */
     private void generateImage(){
         if(!running.compareAndSet(false,true))return;
         result=null;
@@ -228,19 +236,64 @@ public final class LocalImageActivity extends Activity {
         int[] sizes={256,384,512};
         int width=sizes[resolution.getSelectedItemPosition()];
         int steps=Integer.parseInt(stepList.getSelectedItem().toString());
-        refresh();message("Loading model locally and sampling. Keep the app open...");
+        int count=Integer.parseInt(batchList.getSelectedItem().toString());
+        final int[] saved={0};
+        refresh();
+        message("Loading model once for "+count+" local image(s). Keep app open...");
         executor.execute(()->{
             try{
-                int[] argb=LocalImageEngine.generate(model,text,neg,width,width,steps,seedValue,4);
-                if(argb==null || argb.length!=width*width)throw new IllegalStateException("No valid pixels returned");
-                Bitmap bmp=Bitmap.createBitmap(argb,width,width,Bitmap.Config.ARGB_8888);
-                runOnUiThread(()->{
-                    result=bmp;preview.setImageBitmap(bmp);
-                    status.setText("LOCAL image generated • "+width+"×"+width+" • "+steps+" steps");
-                });
-            }catch(Throwable e){message("Local inference failed: "+e.getMessage());}
-            finally{running.set(false);runOnUiThread(this::refresh);}
+                int finished=LocalImageEngine.generateBatch(model,text,neg,width,width,steps,seedValue,4,count,
+                    (index,argb)->{
+                        if(argb==null || argb.length!=width*width)
+                            throw new IllegalStateException("Native frame size mismatch");
+                        Bitmap bmp=Bitmap.createBitmap(argb,width,width,Bitmap.Config.ARGB_8888);
+                        try {
+                            Uri gallery=saveLocalPng(bmp,index+1);
+                            saved[0]++;
+                            runOnUiThread(()->{
+                                result=bmp;
+                                preview.setImageBitmap(bmp);
+                                status.setText("Saved local image "+(index+1)+"/"+count+
+                                    " to Gallery. No cloud upload.");
+                            });
+                        } catch(Exception error) {
+                            bmp.recycle();
+                            throw new IllegalStateException("Image "+(index+1)+" could not save: "+error.getMessage(),error);
+                        }
+                    });
+                message("Local batch finished: "+finished+"/"+count+" images. "+saved[0]+
+                        " saved to Gallery."+(finished<count?" Rendering cancelled.":""));
+            }catch(Throwable e){
+                message("Local batch stopped after "+saved[0]+" image(s): "+e.getMessage());
+            }finally{
+                running.set(false);runOnUiThread(this::refresh);
+            }
         });
+    }
+
+    private Uri saveLocalPng(Bitmap bmp,int number) throws Exception {
+        Uri output=null;
+        try {
+            ContentValues values=new ContentValues();
+            values.put(MediaStore.Images.Media.DISPLAY_NAME,
+                    "realframe_local_"+System.currentTimeMillis()+"_"+number+".png");
+            values.put(MediaStore.Images.Media.MIME_TYPE,"image/png");
+            values.put(MediaStore.Images.Media.RELATIVE_PATH,"Pictures/RealFrameStudio");
+            values.put(MediaStore.Images.Media.IS_PENDING,1);
+            output=getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,values);
+            if(output==null)throw new IllegalStateException("Gallery unavailable");
+            try(OutputStream stream=getContentResolver().openOutputStream(output,"w")){
+                if(stream==null||!bmp.compress(Bitmap.CompressFormat.PNG,100,stream))
+                    throw new IllegalStateException("PNG encoder failed");
+            }
+            ContentValues done=new ContentValues();
+            done.put(MediaStore.Images.Media.IS_PENDING,0);
+            getContentResolver().update(output,done,null,null);
+            return output;
+        } catch(Exception error){
+            if(output!=null) getContentResolver().delete(output,null,null);
+            throw error;
+        }
     }
     private void export(){
         if(result==null){notifyUser("Generate a local image first.");return;}
