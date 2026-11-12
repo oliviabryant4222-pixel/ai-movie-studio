@@ -27,7 +27,7 @@ def main() -> None:
     gradle = gradle_path.read_text(encoding='utf-8')
     for key in ['compileSdk = 35', 'targetSdk = 35', 'versionName = "1.1.0-test"']:
         require(key in gradle, f'App gradle missing {key}')
-    require('applicationId = "studio.realframe"' in gradle,
+    require('applicationId = "studio.realframe.beta"' in gradle,
             'Unexpected applicationId: verify package/manifest before publishing')
 
     root = ET.parse(manifest_path).getroot()

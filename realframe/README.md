@@ -27,6 +27,8 @@ This is the **source-code update** to v1.0, not a compiled APK. v1.0's synthetic
 ## Build
 Project is in `android/` (Android Gradle Plugin 8.6.1, compile SDK 35, JDK 17). GitHub Actions workflow: `.github/workflows/android-debug.yml`. It runs Python + Java unit tests and `gradle assembleDebug`, then verifies debug APK signature. See `BUILD_APK.md`.
 
+**Side-by-side beta testing:** v1.1 uses package `studio.realframe.beta` and launcher label **RealFrame Studio Beta**, so it can be installed alongside the already-tested v1.0 rather than forcing you to uninstall your old app. Saved data is separate between them.
+
 **Developer validation:** 28 Python tests passed, 7 Java media-header tests passed. Android compilation and Snapdragon device testing have **NOT** happened in this development environment. A source ZIP is not an APK.
 
 ## Important update-install warning

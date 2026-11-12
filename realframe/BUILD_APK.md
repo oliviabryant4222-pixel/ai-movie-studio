@@ -6,7 +6,7 @@ GitHub repo workflow entrypoint is `.github/workflows/android-debug.yml`, projec
 2. Trigger a build from the Actions tab (workflow_dispatch, select the branch), or configure the workflow push trigger to your branch.
 3. Confirm all checks pass: Python tests, Java MediaSignature test, Android Gradle compilation, `apksigner verify`, and `aapt dump badging`.
 4. From successful workflow run → Artifacts → `RealFrameStudio-v1_1-debug-apk` → extract `app-debug.apk`.
-5. Install on Samsung. If Android refuses with "App not installed" / conflicting signature, previous v1.0 debug APK was signed with a different key; **do not uninstall old app if you need its private saved data**. See README update-signing warning.
+5. Install on Samsung. v1.1 beta uses a separate app ID (`studio.realframe.beta`) from v1.0; it should install side-by-side without altering the old app. Different debug APK signatures on later beta builds can still prevent direct upgrades of the beta itself; back up before reinstalling. See README update-signing warning.
 
 CLI equivalent when SDK 35/JDK 17/Gradle 8.9 installed:
 ```

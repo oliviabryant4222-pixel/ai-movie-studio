@@ -4,7 +4,7 @@ android {
     namespace = "studio.realframe"
     compileSdk = 35
     defaultConfig {
-        applicationId = "studio.realframe"
+        applicationId = "studio.realframe.beta"
         minSdk = 29
         targetSdk = 35
         versionCode = 11
