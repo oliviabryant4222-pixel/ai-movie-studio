@@ -209,6 +209,7 @@ public final class StudioDashboardActivity extends Activity {
         heading("Create offline","No internet required for local photo and video editing");
         LinearLayout mode=card(content,CARD);
         tile(mode,"◈","Photo Lab","Adjust brightness, contrast & saturation; save JPG",CYAN,()->open(OfflinePhotoLabActivity.class));
+        tile(mode,"▧","Still Image → MP4","Export a silent video from a photo",CYAN,()->open(OfflineImageVideoActivity.class));
         tile(mode,"▤","Clip Timeline","Import video clips and merge into MP4",ACCENT,()->advanced("Clips"));
         tile(mode,"◇","Characters & references","Store character recipes and appearance notes",0xFFFFC582,()->advanced("Characters"));
         tile(mode,"◷","Storyboard & jobs","Arrange scenes, save project, resume later",ACCENT,()->advanced("Storyboard"));
