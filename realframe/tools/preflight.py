@@ -50,7 +50,7 @@ def main() -> None:
 
     base = ANDROID/'app/src/main/java/studio/realframe'
     required = ['MainActivity.java','RenderService.java','Renderer.java', 'StudioStore.java',
-                'SecretVault.java','ClipStitcher.java','MediaSignature.java', 'WebStudioActivity.java', 'StudioDashboardActivity.java', 'OfflinePhotoLabActivity.java', 'OfflineImageVideoActivity.java', 'ModelManagerActivity.java', 'ProductionPlannerActivity.java', 'LocalImageActivity.java', 'LocalImageEngine.java', 'UnifiedCreateActivity.java', 'HybridRoutePolicy.java', 'LocalVideoEngine.java', 'LocalVideoActivity.java', 'LocalVideoEncoder.java', 'LocalApiService.java', 'LocalApiSecurity.java', 'LocalApiWebPage.java', 'LocalApiActivity.java', 'LocalWebClientActivity.java', 'QuickStartActivity.java', 'AutoModelDownloadService.java', 'ReferenceStudioActivity.java', 'StoryMovieComposerActivity.java']
+                'SecretVault.java','ClipStitcher.java','MediaSignature.java', 'WebStudioActivity.java', 'StudioDashboardActivity.java', 'OfflinePhotoLabActivity.java', 'OfflineImageVideoActivity.java', 'ModelManagerActivity.java', 'ProductionPlannerActivity.java', 'LocalImageActivity.java', 'LocalImageEngine.java', 'UnifiedCreateActivity.java', 'HybridRoutePolicy.java', 'LocalVideoEngine.java', 'LocalVideoActivity.java', 'LocalVideoEncoder.java', 'LocalApiService.java', 'LocalApiSecurity.java', 'LocalApiWebPage.java', 'LocalApiActivity.java', 'LocalWebClientActivity.java', 'QuickStartActivity.java', 'AutoModelDownloadService.java', 'ReferenceStudioActivity.java', 'StoryMovieComposerActivity.java', 'LocalAutoFilmActivity.java']
     for name in required:
         path = base / name
         require(path.is_file(), f'Missing Java file: {name}')
