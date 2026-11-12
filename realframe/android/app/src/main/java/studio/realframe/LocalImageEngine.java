@@ -68,6 +68,8 @@ public final class LocalImageEngine {
             throw new IllegalArgumentException("Resolution must be multiples of 64 up to 1024");
         if (steps < 1 || steps > 100 || threads < 1 || threads > 8)
             throw new IllegalArgumentException("Invalid steps or thread count");
+        if (seed < 1 || seed > 2147483647L)
+            throw new IllegalArgumentException("Batch seed must be 1 to 2147483647");
         return nativeGenerateBatch(modelPath, prompt.trim(), negative == null ? "" : negative,
                                    width, height, steps, seed, threads, count, callback);
     }
