@@ -87,7 +87,7 @@ public final class ModelManagerActivity extends Activity {
     private boolean backendReady(){
         // IMPORTANT: The current APK deliberately does not ship or expose a native AI renderer.
         // Loading a model URI is not equivalent to having an inference pipeline.
-        return false;
+        return LocalImageEngine.isAvailable();
     }
     private String readableMemory(){
         ActivityManager manager=(ActivityManager)getSystemService(ACTIVITY_SERVICE);
@@ -149,9 +149,9 @@ public final class ModelManagerActivity extends Activity {
     private void refresh(){
         if(modeStatus!=null){
             String mode=prefs.getString("mode","hybrid");
-            modeStatus.setText("Selected: "+mode.toUpperCase()+"  ·  Native AI inference: "+(backendReady()?"Ready":"Not installed"));
+            modeStatus.setText("Selected: "+mode.toUpperCase()+"  ·  Native CPU image engine: "+(backendReady()?"Ready":"Not installed"));
         }
-        if(engineStatus!=null)engineStatus.setText("Status: Unavailable — local generative inference not bundled");
+        if(engineStatus!=null)engineStatus.setText("Status: CPU text-to-image runtime installed if APK native library loaded; image model still required");
         if(stats!=null)stats.setText(readableMemory());
         if(sourceStatus!=null){
             String uri=prefs.getString("uri","");
