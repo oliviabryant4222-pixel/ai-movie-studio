@@ -106,10 +106,14 @@ public final class UnifiedCreateActivity extends Activity {
         put(p,label("For local images, import a compatible SD1.5 checkpoint first. Image batches are CPU-only and can take considerable time. Local AI video is now experimental: download/import Wan T2V diffusion, T5 and VAE files (multi-GB). Cloud remains available.",13,DIM,false));
         button(p,"✦  CREATE",0xFF6051BB,this::create);
         button(p,"◇  REFERENCE IMAGE AI (LOCAL)",0xFF356F77,()->{
-            Intent intent=new Intent(this,ReferenceStudioActivity.class);
-            intent.putExtra("prompt",builtPrompt());
-            startActivity(intent);
+            try{
+                Intent intent=new Intent(this,ReferenceStudioActivity.class);
+                intent.putExtra("prompt",builtPrompt());
+                startActivity(intent);
+            }catch(IllegalArgumentException bad){error(bad.getMessage());}
         });
+        button(p,"✦  AUTOMATIC LOCAL AI STORY → MP4",0xFF4A4386,()->
+            startActivity(new Intent(this,LocalAutoFilmActivity.class)));
         button(p,"▶  OFFLINE CINEMATIC MOVIE",0xFF3E5580,()->
             startActivity(new Intent(this,StoryMovieComposerActivity.class)));
         button(p,"☷  MODEL MANAGER",0xFF25776E,()->startActivity(new Intent(this,ModelManagerActivity.class)));
