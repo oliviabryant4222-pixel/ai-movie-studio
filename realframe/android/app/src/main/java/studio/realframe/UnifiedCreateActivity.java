@@ -26,7 +26,7 @@ import java.util.List;
 /**
  * Unified prompt-first Create page with explicit cloud privacy consent.
  * Local image batches run only in LocalImageActivity. Hosted demos retain
- * their own quotas/login/content terms. Local AI video is not implemented.
+ * their own quotas/login/content terms. Local AI video is experimental; local photo-motion MP4 is provided separately.
  */
 public final class UnifiedCreateActivity extends Activity {
     private static final int BG=0xFF0B1425, PANEL=0xFF172740, WHITE=0xFFF2F6FF,
@@ -105,6 +105,13 @@ public final class UnifiedCreateActivity extends Activity {
         gap(p,12);
         put(p,label("For local images, import a compatible SD1.5 checkpoint first. Image batches are CPU-only and can take considerable time. Local AI video is now experimental: download/import Wan T2V diffusion, T5 and VAE files (multi-GB). Cloud remains available.",13,DIM,false));
         button(p,"✦  CREATE",0xFF6051BB,this::create);
+        button(p,"◇  REFERENCE IMAGE AI (LOCAL)",0xFF356F77,()->{
+            Intent intent=new Intent(this,ReferenceStudioActivity.class);
+            intent.putExtra("prompt",builtPrompt());
+            startActivity(intent);
+        });
+        button(p,"▶  OFFLINE CINEMATIC MOVIE",0xFF3E5580,()->
+            startActivity(new Intent(this,StoryMovieComposerActivity.class)));
         button(p,"☷  MODEL MANAGER",0xFF25776E,()->startActivity(new Intent(this,ModelManagerActivity.class)));
         gap(p,10);
         put(p,label("PRIVACY: Cloud prompts and uploaded references leave your phone. Never automatically fall back from local mode to hosted providers.",12,0xFFF5C8A7,false));
