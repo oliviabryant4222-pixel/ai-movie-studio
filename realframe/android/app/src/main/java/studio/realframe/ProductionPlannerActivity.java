@@ -140,6 +140,8 @@ public final class ProductionPlannerActivity extends Activity {
         action(panel,"✦  Build storyboard (offline)",this::build);
         action(panel,"💾  Save manifest as JSON",this::saveProject);
         action(panel,"📋  Copy ALL scene prompts",this::copyAll);
+        action(panel,"✦  Automatic local AI story → MP4",()->
+            startActivity(new Intent(this,LocalAutoFilmActivity.class)));
         action(panel,"◈  Generate local character reference images",()->
             startActivity(new Intent(this,ReferenceStudioActivity.class)));
         action(panel,"🎬  Turn storyboard images into offline MP4",()->
