@@ -27,7 +27,7 @@ endif()
 
 add_subdirectory("${SDCPP_DIR}" "${CMAKE_CURRENT_BINARY_DIR}/sdcpp" EXCLUDE_FROM_ALL)
 
-add_library(realframe_sd SHARED realframe_sd_jni.cpp)
+add_library(realframe_sd SHARED realframe_sd_jni.cpp realframe_video_jni.cpp)
 target_include_directories(realframe_sd PRIVATE "${SDCPP_DIR}/include")
 target_compile_options(realframe_sd PRIVATE -fexceptions -frtti)
 find_library(android_log log)
