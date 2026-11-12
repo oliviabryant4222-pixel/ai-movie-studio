@@ -1,0 +1,103 @@
+{
+  "project": "RealFrame Studio",
+  "created_utc": "2026-11-12T05:55:55.283233+00:00",
+  "character": {
+    "name": "Avery",
+    "age": 25,
+    "identity_prompt": "Fictional 25-year-old adult woman, expressive brown eyes, dark brown natural hair, realistic complexion, visible pores, gentle asymmetry, candid photographic realism",
+    "wardrobe_prompt": "Casual opaque cotton sage-green T-shirt and white shorts",
+    "visual_style": "Natural daylight, full-frame photo optics, no beauty filter",
+    "seed": 73019,
+    "model": "choose-a-compatible-local-model",
+    "scene_theme": "ordinary day in a softly lit apartment"
+  },
+  "target_seconds": 30.0,
+  "clip_seconds": 5.0,
+  "note": "This is a shot plan, not generated media. Sequential clips use last-frame conditioning when supported.",
+  "scenes": [
+    {
+      "id": "clip_001",
+      "order": 1,
+      "seconds": 5.0,
+      "character": "Avery",
+      "model": "choose-a-compatible-local-model",
+      "prompt": "Fictional 25-year-old adult woman, expressive brown eyes, dark brown natural hair, realistic complexion, visible pores, gentle asymmetry, candid photographic realism. Casual opaque cotton sage-green T-shirt and white shorts. Natural daylight, full-frame photo optics, no beauty filter. ordinary day in a softly lit apartment. Natural movement, believable motion, consistent clothing and identity",
+      "motion_prompt": "Gentle natural head and hand movement, realistic blinking, stable camera",
+      "seed": 73019,
+      "start_frame": "master_reference_image",
+      "depends_on": null,
+      "output": "clips/clip_001.mp4",
+      "status": "not_started"
+    },
+    {
+      "id": "clip_002",
+      "order": 2,
+      "seconds": 5.0,
+      "character": "Avery",
+      "model": "choose-a-compatible-local-model",
+      "prompt": "Fictional 25-year-old adult woman, expressive brown eyes, dark brown natural hair, realistic complexion, visible pores, gentle asymmetry, candid photographic realism. Casual opaque cotton sage-green T-shirt and white shorts. Natural daylight, full-frame photo optics, no beauty filter. ordinary day in a softly lit apartment. Natural movement, believable motion, consistent clothing and identity",
+      "motion_prompt": "Gentle natural head and hand movement, realistic blinking, stable camera",
+      "seed": 73020,
+      "start_frame": "clip_001_last_frame",
+      "depends_on": "clip_001",
+      "output": "clips/clip_002.mp4",
+      "status": "not_started"
+    },
+    {
+      "id": "clip_003",
+      "order": 3,
+      "seconds": 5.0,
+      "character": "Avery",
+      "model": "choose-a-compatible-local-model",
+      "prompt": "Fictional 25-year-old adult woman, expressive brown eyes, dark brown natural hair, realistic complexion, visible pores, gentle asymmetry, candid photographic realism. Casual opaque cotton sage-green T-shirt and white shorts. Natural daylight, full-frame photo optics, no beauty filter. ordinary day in a softly lit apartment. Natural movement, believable motion, consistent clothing and identity",
+      "motion_prompt": "Gentle natural head and hand movement, realistic blinking, stable camera",
+      "seed": 73021,
+      "start_frame": "clip_002_last_frame",
+      "depends_on": "clip_002",
+      "output": "clips/clip_003.mp4",
+      "status": "not_started"
+    },
+    {
+      "id": "clip_004",
+      "order": 4,
+      "seconds": 5.0,
+      "character": "Avery",
+      "model": "choose-a-compatible-local-model",
+      "prompt": "Fictional 25-year-old adult woman, expressive brown eyes, dark brown natural hair, realistic complexion, visible pores, gentle asymmetry, candid photographic realism. Casual opaque cotton sage-green T-shirt and white shorts. Natural daylight, full-frame photo optics, no beauty filter. ordinary day in a softly lit apartment. Natural movement, believable motion, consistent clothing and identity",
+      "motion_prompt": "Gentle natural head and hand movement, realistic blinking, stable camera",
+      "seed": 73022,
+      "start_frame": "clip_003_last_frame",
+      "depends_on": "clip_003",
+      "output": "clips/clip_004.mp4",
+      "status": "not_started"
+    },
+    {
+      "id": "clip_005",
+      "order": 5,
+      "seconds": 5.0,
+      "character": "Avery",
+      "model": "choose-a-compatible-local-model",
+      "prompt": "Fictional 25-year-old adult woman, expressive brown eyes, dark brown natural hair, realistic complexion, visible pores, gentle asymmetry, candid photographic realism. Casual opaque cotton sage-green T-shirt and white shorts. Natural daylight, full-frame photo optics, no beauty filter. ordinary day in a softly lit apartment. Natural movement, believable motion, consistent clothing and identity",
+      "motion_prompt": "Gentle natural head and hand movement, realistic blinking, stable camera",
+      "seed": 73023,
+      "start_frame": "clip_004_last_frame",
+      "depends_on": "clip_004",
+      "output": "clips/clip_005.mp4",
+      "status": "not_started"
+    },
+    {
+      "id": "clip_006",
+      "order": 6,
+      "seconds": 5.0,
+      "character": "Avery",
+      "model": "choose-a-compatible-local-model",
+      "prompt": "Fictional 25-year-old adult woman, expressive brown eyes, dark brown natural hair, realistic complexion, visible pores, gentle asymmetry, candid photographic realism. Casual opaque cotton sage-green T-shirt and white shorts. Natural daylight, full-frame photo optics, no beauty filter. ordinary day in a softly lit apartment. Natural movement, believable motion, consistent clothing and identity",
+      "motion_prompt": "Gentle natural head and hand movement, realistic blinking, stable camera",
+      "seed": 73024,
+      "start_frame": "clip_005_last_frame",
+      "depends_on": "clip_005",
+      "output": "clips/clip_006.mp4",
+      "status": "not_started"
+    }
+  ]
+}

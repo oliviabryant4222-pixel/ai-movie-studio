@@ -1,0 +1,10 @@
+{
+  "note": "ILLUSTRATIVE ONLY: Replace URLs, endpoint and positional arguments with the Space API schema. Placeholder values are strings so the template is valid JSON; the Android app converts numeric whole-token placeholders to numbers.",
+  "imageSpace": "https://example-image.hf.space",
+  "imageEndpoint": "/generate",
+  "imageArgs": "[\"{{prompt}}\", \"{{negative}}\", \"{{seed}}\", \"{{width}}\", \"{{height}}\"]",
+  "videoSpace": "https://example-video.hf.space",
+  "videoEndpoint": "/generate_video",
+  "videoArgs": "[{\"path\":\"{{image_path}}\"}, \"{{prompt}}\", \"{{duration}}\"]",
+  "security": "Providers require their own positional API argument order and may use file objects, not just raw paths. Never paste HF access tokens into job prompts."
+}

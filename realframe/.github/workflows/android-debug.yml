@@ -1,0 +1,56 @@
+name: Build Android debug APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'android/**'
+      - 'tools/**'
+      - 'tests/**'
+      - '.github/workflows/android-debug.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Python/FFmpeg utility tests
+        run: |
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          fi
+          python3 -m unittest discover -s tests -v
+      - name: Install JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Install Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+      - name: Install Android API 35 platform
+        run: sdkmanager 'platforms;android-35' 'build-tools;35.0.0'
+      - name: Source/configuration preflight
+        run: python3 tools/preflight.py
+      - name: Assemble debug APK
+        working-directory: android
+        run: gradle --no-daemon --stacktrace assembleDebug
+      - name: Check APK package signature and metadata
+        run: |
+          test -s android/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose android/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging android/app/build/outputs/apk/debug/app-debug.apk | head -n 15
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: RealFrameStudio-v1-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error

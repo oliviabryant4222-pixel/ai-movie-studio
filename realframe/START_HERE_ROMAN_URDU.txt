@@ -1,0 +1,6 @@
+Bro, RealFrame v1 test project.
+1) APK source ZIP direct install nahi hota. GitHub Actions ya Android Studio se APK build hoti hai.
+2) APK install ke baad Home par offline TEST image aur TEST video dabao. Ye AI nahi, sirf install aur gallery ke diagnostic files hain.
+3) Real AI ke liye Nightmare Mobile ka installed model + local API, ya configured Hugging Face Gradio Space required hai. Free cloud unlimited nahin.
+4) Video Snapdragon 8 Gen 3 par experimental ho sakta hai; Nightmare models mein actual compatibility check karo.
+5) Jobs aur Clips ke controls, Character Vault aur long-storyboard planning ab test karo.
