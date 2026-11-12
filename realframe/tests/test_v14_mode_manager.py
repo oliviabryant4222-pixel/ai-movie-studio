@@ -15,18 +15,18 @@ class HybridRoutingTests(unittest.TestCase):
         self.assertIn('"Hybrid"',s)
         self.assertIn('drawHybrid()',s)
         self.assertIn('ModelManagerActivity.class',s)
-        self.assertIn('no native on-device ai engine',s.lower())
+        self.assertIn('local ai image (cpu beta)',s.lower())
 
     def test_android_model_saf_reference(self):
         s=(JAVA/"ModelManagerActivity.java").read_text()
         for snippet in ["ACTION_OPEN_DOCUMENT", "ACTION_OPEN_DOCUMENT_TREE",
                         "takePersistableUriPermission","getSharedPreferences",
-                        "String.join(", "backendReady()", "return false;"]:
+                        "String.join(", "backendReady()", "LocalImageEngine.isAvailable()"]:
             self.assertIn(snippet,s)
 
     def test_explicit_false_ready(self):
         s=(JAVA/"ModelManagerActivity.java").read_text()
-        self.assertIn("local generative inference not bundled",s.lower())
+        self.assertIn("cpu text-to-image runtime installed",s.lower())
         self.assertIn('putString("mode",value)',s)
 
     def test_manifest(self):
