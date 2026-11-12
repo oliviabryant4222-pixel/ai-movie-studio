@@ -9,10 +9,11 @@
 #include <atomic>
 #include "stable-diffusion.h"
 
+extern std::atomic<bool> g_realframe_model_busy;
 namespace {
 std::mutex s_mutex;
 sd_ctx_t* s_active=nullptr;
-std::atomic<bool> s_busy{false};
+
 std::atomic<bool> s_cancel{false};
 void fail(JNIEnv* env,const std::string& message){
     jclass klass=env->FindClass("java/lang/IllegalStateException");
@@ -30,10 +31,10 @@ struct Exclusive {
     bool ok;
     Exclusive() {
         bool expected=false;
-        ok=s_busy.compare_exchange_strong(expected,true);
+        ok=g_realframe_model_busy.compare_exchange_strong(expected,true);
         if(ok)s_cancel.store(false);
     }
-    ~Exclusive(){if(ok)s_busy.store(false);}
+    ~Exclusive(){if(ok)g_realframe_model_busy.store(false);}
 };
 struct Context {
     sd_ctx_t* ptr;
