@@ -94,7 +94,7 @@ public final class LocalImageActivity extends Activity {
         File model=new File(path);
         if(modelStatus!=null) modelStatus.setText(model.isFile()
             ? "Model ready: "+model.getName()+" ("+(model.length()/(1024L*1024L))+" MB)"
-            : "No model imported. Choose a SINGLE-FILE compatible SD1.5 checkpoint.");
+            : "No model installed. Tap ONE-TAP AI SETUP to install automatically.");
         if(engineStatus!=null)engineStatus.setText(LocalImageEngine.isAvailable()
             ? "Native CPU inference library: INSTALLED ✓"
             : "Native CPU inference library unavailable: "+LocalImageEngine.unavailableReason());
@@ -116,7 +116,9 @@ public final class LocalImageActivity extends Activity {
 
         engineStatus=label("",13,TEAL,true);put(form,engineStatus);gap(form,9);
         modelStatus=label("",13,MUTED,false);put(form,modelStatus);
-        importModel=button(form,"📁 Import single-file SD checkpoint",()->chooseModel(),0xFF484180);
+        button(form,"✦ ONE-TAP AI SETUP (no manual model file)",()->
+            startActivity(new Intent(this,QuickStartActivity.class)),0xFF257F73);
+        importModel=button(form,"📁 Advanced: import your own SD checkpoint",()->chooseModel(),0xFF484180);
         gap(form,7);
         put(form,label("Use a legitimately downloaded SD1.5 / compatible single-file checkpoint. The model may be several GB and copying uses extra storage. Splitted FLUX/Wan model packs and unsupported formats cannot be loaded through this simple adapter.",12,MUTED,false));
         gap(form,12);
