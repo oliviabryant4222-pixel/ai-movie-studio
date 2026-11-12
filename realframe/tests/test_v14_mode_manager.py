@@ -15,7 +15,7 @@ class HybridRoutingTests(unittest.TestCase):
         self.assertIn('"Hybrid"',s)
         self.assertIn('drawHybrid()',s)
         self.assertIn('ModelManagerActivity.class',s)
-        self.assertIn('no native on-device AI engine',s.lower())
+        self.assertIn('no native on-device ai engine',s.lower())
 
     def test_android_model_saf_reference(self):
         s=(JAVA/"ModelManagerActivity.java").read_text()
