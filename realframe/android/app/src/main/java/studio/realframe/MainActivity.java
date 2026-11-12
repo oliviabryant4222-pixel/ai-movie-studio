@@ -94,11 +94,11 @@ public final class MainActivity extends Activity {
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(12), dp(16), dp(12), dp(6));
         root.setBackgroundColor(Color.rgb(249,249,251)); setContentView(root);
-        TextView header = text("REALFRAME  ·  AI STUDIO  1.1", 17);
+        TextView header = text("REALFRAME  ·  AI STUDIO  1.2", 17);
         header.setTypeface(null, 1); root.addView(header);
         HorizontalScrollView menuScroll = new HorizontalScrollView(this);
         LinearLayout menu = new LinearLayout(this); menu.setOrientation(LinearLayout.HORIZONTAL);
-        String[] tabs = {"Home", "Connect AI", "Generate", "Characters", "Storyboard", "Jobs", "Clips", "Settings"};
+        String[] tabs = {"Home", "Free AI", "Generate", "Characters", "Storyboard", "Jobs", "Clips", "Settings"};
         for (String name : tabs) {
             Button b = new Button(this); b.setText(name); b.setTextSize(12);
             b.setAllCaps(false); b.setOnClickListener(v -> navigate(name));
@@ -112,6 +112,7 @@ public final class MainActivity extends Activity {
     }
     private void navigate(String tab) {
         switch (tab) {
+            case "Free AI": openFreeStudio("image"); break;
             case "Connect AI": showConnect(); break;
             case "Generate": showGenerate(); break;
             case "Characters": showCharacters(); break;
@@ -123,15 +124,22 @@ public final class MainActivity extends Activity {
         }
     }
 
+    private void openFreeStudio(String kind) {
+        Intent i = new Intent(this, WebStudioActivity.class);
+        i.putExtra("kind", kind);
+        startActivity(i);
+    }
+
     private void showHome() {
         layout("Home"); title("Your mobile AI production studio");
-        note("Source-code prototype (requires separate working inference backend). Generate via Nightmare Mobile local API or optional public Hugging Face Gradio Spaces. Free cloud GPU quotas are not unlimited.");
-        button("⚡ Connect and generate first REAL AI image", this::showConnect);
+        note("No extra generator app required for online image/video demos. Free AI tab opens Hugging Face model demos inside this app. Internet + provider quotas apply. Fully offline model generation is NOT implemented yet.");
+        button("🌐 Generate images — no API token", () -> openFreeStudio("image"));
+        button("🎬 Generate videos — no API token", () -> openFreeStudio("video"));
         button("📸 Image / 🎬 Video generation", this::showGenerate);
         button("🧬 Character Vault", this::showCharacters);
         button("📦 Queue / resume jobs", this::showJobs);
         button("🎞 Join short MP4 clips", this::showClips);
-        button("⚙ Configure generation backends", this::showSettings);
+        button("⚙ Optional advanced generation settings", this::showSettings);
         sep(); title("Test without setting up an AI model");
         note("Use the offline diagnostic to verify installation, job queue, gallery save and MP4 playback. Its outputs are test files, NOT AI-generated images or videos.");
         button("✓ Generate offline TEST image", () -> queueDiagnostic("image"));
@@ -139,8 +147,8 @@ public final class MainActivity extends Activity {
         note("Device reported: " + android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL +
                 (android.os.Build.VERSION.SDK_INT >= 31 ? " · SoC " + android.os.Build.SOC_MODEL : ""));
         sep();
-        note("PHONE-LOCAL: install Nightmare Mobile separately, download compatible models, enable Settings → Advanced → API. Your app does not bundle its proprietary/missing native inference binary.");
-        note("SNAPDRAGON 8 GEN 3 / 12GB: Most Nightmare video flows list 8 Elite; Wan 2.2 is marked alpha on 8 Gen 3. Verify on-device model support first. Cloud video requires a working Space and free quota.");
+        note("NO NIGHTMARE NEEDED for Free AI tab. Its image/video models run on third-party Hugging Face servers. The Local backend in advanced screens is legacy and needs an external engine.");
+        note("Your Snapdragon 8 Gen 3 is used for the UI, queue and local clip editor. This version does not include native on-device diffusion inference. Hosted video requires available GPU quota.");
         note("A foreground notification keeps your render queue running when leaving this screen, within Android foreground-service time limits. Avoid force-stopping the app. Saved uncertain jobs need manual retry. MP4 merging needs matching formats.");
     }
 
