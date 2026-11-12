@@ -74,6 +74,35 @@ public final class LocalImageEngine {
                                    width, height, steps, seed, threads, count, callback);
     }
 
+    /**
+     * Real img2img reference-conditioned SD generation. The reference is RGB
+     * photo input, NOT face-identity embedding. Smaller strength retains more
+     * of the original composition and features; consistency is not guaranteed.
+     */
+    public static int generateReferenceBatch(String model, String prompt, String negative,
+                                             int width,int height,int steps,long seed,int threads,
+                                             int count,int[] referenceARGB,float strength,
+                                             BatchListener sink) {
+        if(!loaded)throw new IllegalStateException("Native local AI engine unavailable: "+loadError);
+        if(model==null||model.trim().isEmpty()||prompt==null||prompt.trim().isEmpty())
+            throw new IllegalArgumentException("Choose a local model and enter a prompt");
+        if(width<64||height<64||width>1024||height>1024||width%64!=0||height%64!=0)
+            throw new IllegalArgumentException("Invalid image resolution");
+        if(referenceARGB==null||referenceARGB.length!=(long)width*height)
+            throw new IllegalArgumentException("Reference image dimensions must match output");
+        if(strength<0.10f||strength>0.95f)
+            throw new IllegalArgumentException("Strength must be 0.10–0.95");
+        if(count<1||count>8||steps<1||steps>100||seed<1||seed>2147483647L||
+           threads<1||threads>8||sink==null)
+            throw new IllegalArgumentException("Invalid local image settings");
+        return nativeReferenceBatch(model,prompt.trim(),negative==null?"":negative.trim(),
+            width,height,steps,seed,threads,count,referenceARGB,strength,sink);
+    }
+
+    private static native int nativeReferenceBatch(String model,String prompt,String negative,
+            int width,int height,int steps,long seed,int threads,int count,
+            int[] referenceARGB,float strength,BatchListener sink);
+
     private static native int nativeGenerateBatch(String model, String prompt, String negative,
                                                    int width, int height, int steps, long seed,
                                                    int threads, int count, BatchListener listener);
