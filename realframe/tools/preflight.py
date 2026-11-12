@@ -27,8 +27,8 @@ def main() -> None:
     gradle = gradle_path.read_text(encoding='utf-8')
     for key in ['compileSdk = 35', 'targetSdk = 35']:
         require(key in gradle, f'App gradle missing {key}')
-    require(any(v in gradle for v in ['versionName = "1.1.0-test"', 'versionName = "1.2.0-beta"']), 'Unexpected versionName')
-    require(any(v in gradle for v in ['applicationId = "studio.realframe.beta"', 'applicationId = "studio.realframe.v12"']),
+    require(any(v in gradle for v in ['versionName = "1.1.0-test"', 'versionName = "1.2.0-beta"', 'versionName = "1.3.0-beta"']), 'Unexpected versionName')
+    require(any(v in gradle for v in ['applicationId = "studio.realframe.beta"', 'applicationId = "studio.realframe.v12"', 'applicationId = "studio.realframe.v13"']),
             'Unexpected applicationId: verify package/manifest before publishing')
 
     root = ET.parse(manifest_path).getroot()
@@ -37,7 +37,7 @@ def main() -> None:
     require(app is not None, 'Missing <application>')
     if app is not None:
         activities = app.findall('activity')
-        require(any(a.get(ns+'name') == '.MainActivity' and a.get(ns+'exported') == 'true'
+        require(any(a.get(ns+'name') in ('.MainActivity','.StudioDashboardActivity') and a.get(ns+'exported') == 'true'
                     for a in activities), 'Launcher activity missing or incorrectly exported')
         services = app.findall('service')
         require(any(s.get(ns+'name') == '.RenderService' and
@@ -50,7 +50,7 @@ def main() -> None:
 
     base = ANDROID/'app/src/main/java/studio/realframe'
     required = ['MainActivity.java','RenderService.java','Renderer.java', 'StudioStore.java',
-                'SecretVault.java','ClipStitcher.java','MediaSignature.java', 'WebStudioActivity.java']
+                'SecretVault.java','ClipStitcher.java','MediaSignature.java', 'WebStudioActivity.java', 'StudioDashboardActivity.java', 'OfflinePhotoLabActivity.java']
     for name in required:
         path = base / name
         require(path.is_file(), f'Missing Java file: {name}')
