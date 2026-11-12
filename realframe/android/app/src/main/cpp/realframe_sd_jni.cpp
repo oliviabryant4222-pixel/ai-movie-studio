@@ -8,20 +8,22 @@
 #include "stable-diffusion.h"
 #include <android/log.h>
 
+// Shared resource gate across local image and video renderers.
+std::atomic<bool> g_realframe_model_busy{false};
 namespace {
 std::mutex g_mutex;
 sd_ctx_t *g_active = nullptr;
 // Reject concurrent model loading too, before a context is registered as active.
-std::atomic<bool> g_busy{false};
+
 std::atomic<bool> g_cancel_requested{false};
 struct Slot {
   bool owned = false;
   Slot() {
     bool expected = false;
-    owned = g_busy.compare_exchange_strong(expected, true);
+    owned = g_realframe_model_busy.compare_exchange_strong(expected, true);
     if(owned)g_cancel_requested.store(false);
   }
-  ~Slot(){if(owned)g_busy.store(false);}
+  ~Slot(){if(owned)g_realframe_model_busy.store(false);}
 };
 void javaError(JNIEnv* env, const std::string& message) {
   jclass klass = env->FindClass("java/lang/IllegalStateException");
