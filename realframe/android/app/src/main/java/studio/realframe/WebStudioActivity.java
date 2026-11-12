@@ -30,7 +30,8 @@ import android.widget.Toast;
 public final class WebStudioActivity extends Activity {
     private static final int FILE_CHOOSER = 7007;
     private static final String IMAGE_SPACE = "https://huggingface.co/spaces/mrfakename/Z-Image-Turbo";
-    private static final String VIDEO_SPACE = "https://huggingface.co/spaces/zerogpu-aoti/wan2-2-fp8da-aoti-faster";
+    private static final String VIDEO_SPACE = "https://huggingface.co/spaces/Wan-AI/Wan2.1";
+    private static final String IMAGE_TO_VIDEO_SPACE = "https://huggingface.co/spaces/zerogpu-aoti/wan2-2-fp8da-aoti-faster";
     private static final String ALT_IMAGE_SPACE = "https://huggingface.co/spaces/Tongyi-MAI/Z-Image-Turbo";
     private WebView web;
     private EditText prompt;
@@ -70,7 +71,7 @@ public final class WebStudioActivity extends Activity {
         title.setPadding(dp(8),dp(5),dp(4),dp(5));
         root.addView(title);
         TextView explainer = new TextView(this);
-        explainer.setText("Image + video models inside the app. Cloud demo: internet required, free quotas apply. No Nightmare or API address/token. The model provider controls its own content rules.");
+        explainer.setText("Choose hosted image AI, Wan2.1 text-to-video, or Wan2.2 image-to-video. Internet and provider quotas apply; services can fail or require login. No Nightmare installation or manual API token.");
         explainer.setTextSize(12); explainer.setTextColor(0xFFADB9CB);
         explainer.setPadding(dp(8),dp(4),dp(8),dp(9));
         root.addView(explainer);
@@ -96,10 +97,11 @@ public final class WebStudioActivity extends Activity {
             toast("Copied! Long-press the generator prompt box and paste.");
         });
         action("Image AI", firstRow, v -> openSpace(IMAGE_SPACE));
-        action("Video AI", firstRow, v -> openSpace(VIDEO_SPACE));
+        action("Text→Video", firstRow, v -> openSpace(VIDEO_SPACE));
         root.addView(firstRow);
         LinearLayout secondRow = new LinearLayout(this);
-        action("Other image AI", secondRow, v -> openSpace(ALT_IMAGE_SPACE));
+        action("Other Image", secondRow, v -> openSpace(ALT_IMAGE_SPACE));
+        action("Image→Video", secondRow, v -> openSpace(IMAGE_TO_VIDEO_SPACE));
         action("Open browser", secondRow, v -> {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(currentSpace)));
         });
