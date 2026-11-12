@@ -105,6 +105,9 @@ public final class QuickStartActivity extends Activity {
             i.putExtra("kind","image");startActivity(i);
         });
         button(note,"⇄ HYBRID create",0xFF336C66,()->open(UnifiedCreateActivity.class));
+        button(note,"◇ Reference Photo AI (local img2img)",0xFF544171,()->open(ReferenceStudioActivity.class));
+        button(note,"✦ Automatic Local AI Story → MP4",0xFF544171,()->open(LocalAutoFilmActivity.class));
+        button(note,"▶ Cinematic Movie from Gallery Photos",0xFF544171,()->open(StoryMovieComposerActivity.class));
         button(note,"▶ Experimental LOCAL AI video lab",0xFF544171,()->open(LocalVideoActivity.class));
         gap(note,12);
         put(note,label("Video caveat: local Wan video requires additional large model components; the one-tap installer currently sets up LOCAL IMAGE AI, not Wan video. Fully local long videos on a 12GB phone are not validated.",12,WARN,false));
