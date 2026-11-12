@@ -118,7 +118,7 @@ public final class StudioDashboardActivity extends Activity {
         put(name,label("REALFRAME",21,WHITE,true));
         put(name,label("AI  /  MOVIE STUDIO",11,MUTED,true));
         top.addView(name,new LinearLayout.LayoutParams(0,-2,1));
-        TextView badge=label("BETA 1.6",11,CYAN,true);
+        TextView badge=label("BETA 1.7",11,CYAN,true);
         badge.setGravity(Gravity.CENTER);badge.setBackground(shape(0xFF172C37,12));
         top.addView(badge,new LinearLayout.LayoutParams(dp(88),dp(35)));
         shell.addView(top);
@@ -177,6 +177,9 @@ public final class StudioDashboardActivity extends Activity {
     }
     private void drawHome(){
         hero();
+        heading("Create a new project","One prompt, local/online/hybrid modes and character presets");
+        LinearLayout creator=card(content,CARD);
+        tile(creator,"✦","UNIFIED CREATOR","New: intelligent routing + privacy consent",ACCENT,()->open(UnifiedCreateActivity.class));
         heading("Create with AI","Hosted image and video models • no Nightmare or manual token");
         LinearLayout online=card(content,CARD);
         tile(online,"✦","AI Image Studio","Realistic portraits · prompts · downloads",ACCENT,()->online("image"));
@@ -187,7 +190,7 @@ public final class StudioDashboardActivity extends Activity {
         tile(modes,"☷","Model & Mode Manager","Register downloaded models; inspect local engine status",ACCENT,()->open(ModelManagerActivity.class));
         heading("On-device generation & editing","Experimental local AI, no cloud upload");
         LinearLayout localAi=card(content,CARD);
-        tile(localAi,"◉","LOCAL AI Image (CPU beta)","On-device SD generation; import checkpoint first",CYAN,()->open(LocalImageActivity.class));
+        tile(localAi,"◉","LOCAL AI Image Batch (CPU beta)","Generate 1–4 images; reuse one loaded model",CYAN,()->open(LocalImageActivity.class));
         heading("Offline workspace","Available without internet or a cloud account");
         LinearLayout offline=card(content,CARD);
         tile(offline,"◈","Photo Lab","Enhance a photo and export JPG offline",CYAN,()->open(OfflinePhotoLabActivity.class));
@@ -205,6 +208,8 @@ public final class StudioDashboardActivity extends Activity {
     }
     private void drawOnline(){
         heading("Generate online","Access hosted models in-app • provider availability and limits apply");
+        LinearLayout creator=card(content,CARD);
+        tile(creator,"✦","Unified Creator","Write a prompt once and select Online mode",ACCENT,()->open(UnifiedCreateActivity.class));
         LinearLayout mode=card(content,CARD);
         tile(mode,"✦","Generate an AI image","Open image model demo",ACCENT,()->online("image"));
         tile(mode,"▣","Generate AI video","Open video model demo",CYAN,()->online("video"));
@@ -215,9 +220,11 @@ public final class StudioDashboardActivity extends Activity {
         tile(note,"↗","Open advanced connectors","Use optional configured APIs & job queue",CYAN,()->advanced("Settings"));
     }
     private void drawOffline(){
-        heading("Create offline","No internet required for local photo and video editing");
+        heading("Create offline","No cloud required for image inference if a model is imported");
+        LinearLayout creator=card(content,CARD);
+        tile(creator,"✦","Unified Creator","Choose Local mode and use a character preset",ACCENT,()->open(UnifiedCreateActivity.class));
         LinearLayout mode=card(content,CARD);
-        tile(mode,"◉","Local AI Image (CPU beta)","Runs fully on phone when checkpoint is imported",CYAN,()->open(LocalImageActivity.class));
+        tile(mode,"◉","Local AI Image Batch (CPU beta)","1–4 images, automatically saved to gallery",CYAN,()->open(LocalImageActivity.class));
         tile(mode,"◈","Photo Lab","Adjust brightness, contrast & saturation; save JPG",CYAN,()->open(OfflinePhotoLabActivity.class));
         tile(mode,"▧","Still Image → MP4","Export a silent video from a photo",CYAN,()->open(OfflineImageVideoActivity.class));
         tile(mode,"▤","Clip Timeline","Import video clips and merge into MP4",ACCENT,()->advanced("Clips"));
@@ -246,9 +253,11 @@ public final class StudioDashboardActivity extends Activity {
             .show();
     }
     private void drawHybrid(){
-        heading("Hybrid Studio","Generate online, edit offline and keep projects in one place");
+        heading("Hybrid Studio","Manual model choice + privacy-first routing");
+        LinearLayout creator=card(content,CARD);
+        tile(creator,"✦","Hybrid Create","Prompt, character, output, local/cloud selection",ACCENT,()->open(UnifiedCreateActivity.class));
         LinearLayout mode=card(content,CARD);
-        tile(mode,"⇄","Choose local or online image","Explicit manual routing; local never sends your prompt",CYAN,()->chooseHybrid());
+        tile(mode,"⇄","Choose local or online image","One prompt + smart routing; cloud consent required",CYAN,()->open(UnifiedCreateActivity.class));
         tile(mode,"◉","Local AI Image (CPU beta)","Runs on-device after model import",CYAN,()->open(LocalImageActivity.class));
         tile(mode,"✦","Generate online image","Remote image model; free provider quota",ACCENT,()->online("image"));
         tile(mode,"▶","Generate online video","Remote model; free provider quota",CYAN,()->online("video"));
