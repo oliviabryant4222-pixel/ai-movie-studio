@@ -78,6 +78,10 @@ public final class WebStudioActivity extends Activity {
         prompt.setHint("Write your AI prompt; tap Copy then paste in the generator below");
         prompt.setMinLines(2);
         prompt.setMaxLines(3);
+        if(getIntent()!=null){
+            String incoming=getIntent().getStringExtra("prompt");
+            if(incoming!=null&&!incoming.isEmpty())prompt.setText(incoming);
+        }
         prompt.setTextColor(0xFFF4F6FC);
         prompt.setHintTextColor(0xFF9BA6BA);
         prompt.setBackground(rounded(0xFF1A2840));
