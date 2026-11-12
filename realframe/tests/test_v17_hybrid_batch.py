@@ -12,7 +12,7 @@ SRC=APP/"src/main/java/studio/realframe"
 class HybridBatchWiringTests(unittest.TestCase):
     def test_jni_batch_keeps_one_context(self):
         cpp=(APP/"src/main/cpp/realframe_sd_jni.cpp").read_text()
-        batch=cpp.split("Java_studio_realframe_LocalImageEngine_nativeGenerateBatch",1)[1]
+        batch=cpp.split("Java_studio_realframe_LocalImageEngine_nativeGenerateBatch",1)[1].split('extern "C"',1)[0]
         for token in ("Slot slot;", "new_sd_ctx(", "generate_image(", "free_sd_image_generation_result(",
                       "CallVoidMethod", "g_cancel_requested", "batchCount > 8", "params.seed="):
             self.assertIn(token,batch)
