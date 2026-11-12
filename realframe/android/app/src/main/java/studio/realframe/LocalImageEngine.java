@@ -44,6 +44,38 @@ public final class LocalImageEngine {
     }
     public static void cancel() { if (loaded) nativeCancel(); }
 
+    /** Called synchronously on the rendering worker after each completed image.
+     * The consumer should save the image promptly; JNI releases its native pixels
+     * immediately after this call returns.
+     */
+    public interface BatchListener {
+        void onFrame(int imageIndex, int[] argb);
+    }
+
+    /** Genuine on-device sequential batch; one native model load, 1–8 images.
+     * Not GPU parallelism. Cancelling may return a partial batch.
+     */
+    public static int generateBatch(String modelPath, String prompt, String negative,
+                                    int width, int height, int steps, long seed, int threads,
+                                    int count, BatchListener callback) {
+        if (!loaded) throw new IllegalStateException("Local diffusion library unavailable: " + loadError);
+        if (callback == null) throw new IllegalArgumentException("Missing frame callback");
+        if (count < 1 || count > 8) throw new IllegalArgumentException("Batch count must be 1–8");
+        if (prompt == null || prompt.trim().isEmpty()) throw new IllegalArgumentException("Prompt required");
+        if (modelPath == null || modelPath.isEmpty()) throw new IllegalArgumentException("Import a local model first");
+        if (width < 64 || width > 1024 || width % 64 != 0 ||
+            height < 64 || height > 1024 || height % 64 != 0)
+            throw new IllegalArgumentException("Resolution must be multiples of 64 up to 1024");
+        if (steps < 1 || steps > 100 || threads < 1 || threads > 8)
+            throw new IllegalArgumentException("Invalid steps or thread count");
+        return nativeGenerateBatch(modelPath, prompt.trim(), negative == null ? "" : negative,
+                                   width, height, steps, seed, threads, count, callback);
+    }
+
+    private static native int nativeGenerateBatch(String model, String prompt, String negative,
+                                                   int width, int height, int steps, long seed,
+                                                   int threads, int count, BatchListener listener);
+
     private static native int[] nativeGenerate(String model, String prompt, String negative,
                                                int width, int height, int steps, long seed, int threads);
     private static native String nativeVersion();
