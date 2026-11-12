@@ -27,7 +27,7 @@ class ProductionPlannerSmokeTests(unittest.TestCase):
         self.assertIn(".ProductionPlannerActivity",entries)
     def test_package(self):
         s=(ROOT/"android/app/build.gradle.kts").read_text()
-        self.assertTrue('applicationId = "studio.realframe.v15"' in s or 'applicationId = "studio.realframe.v16"' in s)
-        self.assertTrue('versionName = "1.5.0-beta"' in s or 'versionName = "1.6.0-local-image-experimental"' in s)
+        self.assertTrue('applicationId = "studio.realframe.v15"' in s or 'applicationId = "studio.realframe.v16"' in s or 'applicationId = "studio.realframe.v17"' in s)
+        self.assertTrue('versionName = "1.5.0-beta"' in s or 'versionName = "1.6.0-local-image-experimental"' in s or 'versionName = "1.7.0-hybrid-batch-beta"' in s)
 
 if __name__ == '__main__':unittest.main()
