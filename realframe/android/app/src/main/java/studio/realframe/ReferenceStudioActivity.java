@@ -262,7 +262,12 @@ public final class ReferenceStudioActivity extends Activity {
                 completed=LocalImageEngine.generateReferenceBatch(path,text,unwanted,
                     size,size,countSteps,userSeed,4,n,pixels,edit,(index,argb)->{
                     Bitmap image=Bitmap.createBitmap(argb,size,size,Bitmap.Config.ARGB_8888);
-                    Uri gallery=save(image,index+1);
+                    try {
+                        save(image,index+1);
+                    }catch(Exception error){
+                        image.recycle();
+                        throw new IllegalStateException("Could not save reference output: "+error.getMessage(),error);
+                    }
                     runOnUiThread(()->{
                         outputView.setImageBitmap(image);
                         status.setText("Saved reference-conditioned image "+(index+1)+"/"+n+
