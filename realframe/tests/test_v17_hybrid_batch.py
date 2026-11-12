@@ -17,7 +17,7 @@ class HybridBatchWiringTests(unittest.TestCase):
                       "CallVoidMethod", "g_cancel_requested", "batchCount > 8", "params.seed="):
             self.assertIn(token,batch)
         self.assertEqual(batch.count("new_sd_ctx("),1)
-        self.assertIn("g_busy.compare_exchange_strong",cpp)
+        self.assertIn("g_realframe_model_busy.compare_exchange_strong",cpp)
 
     def test_batch_java_api_and_auto_gallery_save(self):
         java=(SRC/"LocalImageEngine.java").read_text()
