@@ -31,4 +31,9 @@ add_library(realframe_sd SHARED realframe_sd_jni.cpp)
 target_include_directories(realframe_sd PRIVATE "${SDCPP_DIR}/include")
 target_compile_options(realframe_sd PRIVATE -fexceptions -frtti)
 find_library(android_log log)
+# Android 15+ devices may use 16KiB memory pages. The native ELF must not
+# be linked with the NDK default 4KiB PT_LOAD segment alignment.
+target_link_options(realframe_sd PRIVATE
+    "-Wl,-z,max-page-size=16384"
+    "-Wl,-z,common-page-size=16384")
 target_link_libraries(realframe_sd PRIVATE stable-diffusion ${android_log} android)
