@@ -1,16 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <!-- The optional Nightmare Mobile local HTTP server binds to a LAN interface. -->
+    <!-- The optional native local AI API binds to localhost; trusted LAN requires opt-in. -->
     <application
         android:allowBackup="false"
         android:label="RealFrame AI Studio"
         android:usesCleartextTraffic="true"
         android:theme="@android:style/Theme.Material.Light.NoActionBar">
         <activity android:name=".WebStudioActivity" android:exported="false"/>
+        <activity android:name=".LocalApiActivity" android:exported="false"/>
+        <activity android:name=".LocalWebClientActivity" android:exported="false"/>
         <activity android:name=".LocalVideoActivity" android:exported="false"/>
         <activity android:name=".UnifiedCreateActivity" android:exported="false"/>
         <activity android:name=".LocalImageActivity" android:exported="false"/>
@@ -25,6 +28,7 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <service android:name=".LocalApiService" android:exported="false" android:foregroundServiceType="dataSync"/>
         <service android:name=".RenderService" android:exported="false" android:foregroundServiceType="dataSync"/>
 
     </application>
