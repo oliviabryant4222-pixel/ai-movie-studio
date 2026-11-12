@@ -99,6 +99,34 @@ public final class LocalImageEngine {
             width,height,steps,seed,threads,count,referenceARGB,strength,sink);
     }
 
+    /**
+     * Genuine on-device AI storyboard keyframes. Every scene gets its own
+     * text prompt. Scene N+1 uses the generated scene N keyframe as img2img
+     * input, which can improve continuity but cannot guarantee face identity.
+     * A separate Android video encoder can animate these still keyframes.
+     */
+    public static int generateStoryboard(String model,String[] scenes,String negative,
+                                         int width,int height,int steps,long seed,int threads,
+                                         float continuityStrength,BatchListener sink){
+        if(!loaded)throw new IllegalStateException("Local SD library is missing: "+loadError);
+        if(model==null||model.isEmpty())throw new IllegalArgumentException("Import SD model first");
+        if(scenes==null||scenes.length<1||scenes.length>12)
+            throw new IllegalArgumentException("Use 1–12 storyboard scenes");
+        for(String prompt:scenes)
+            if(prompt==null||prompt.trim().isEmpty()||prompt.length()>4000)
+                throw new IllegalArgumentException("Empty or excessively long scene prompt");
+        if(width<64||width>768||height<64||height>768||width%64!=0||height%64!=0)
+            throw new IllegalArgumentException("Unsupported storyboard resolution");
+        if(steps<1||steps>40||seed<1||seed>2147483647L||threads<1||threads>8||
+           continuityStrength<0.15f||continuityStrength>0.90f||sink==null)
+            throw new IllegalArgumentException("Invalid storyboard options");
+        return nativeStoryboard(model,scenes,negative==null?"":negative,width,height,steps,
+                                seed,threads,continuityStrength,sink);
+    }
+    private static native int nativeStoryboard(String model,String[] scenes,String negative,
+            int width,int height,int steps,long seed,int threads,float continuityStrength,
+            BatchListener sink);
+
     private static native int nativeReferenceBatch(String model,String prompt,String negative,
             int width,int height,int steps,long seed,int threads,int count,
             int[] referenceARGB,float strength,BatchListener sink);
