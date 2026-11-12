@@ -6,7 +6,7 @@ package studio.realframe;
  */
 public final class HybridRoutePolicy {
     public enum Mode { LOCAL, ONLINE, HYBRID }
-    public enum Decision { LOCAL_IMAGE, ONLINE_CONFIRM, MANUAL_CHOICE, UNSUPPORTED_LOCAL_VIDEO }
+    public enum Decision { LOCAL_IMAGE, LOCAL_VIDEO, ONLINE_CONFIRM, MANUAL_CHOICE, UNSUPPORTED_LOCAL_VIDEO }
 
     private static final long SAFE_IMAGE_RAM = 3L * 1024L * 1024L * 1024L;
 
@@ -29,6 +29,24 @@ public final class HybridRoutePolicy {
         if (mode == Mode.LOCAL) return Decision.LOCAL_IMAGE;
         if (installedNativeEngine && importedModel && availableRamBytes >= SAFE_IMAGE_RAM)
             return Decision.LOCAL_IMAGE;
+        return Decision.MANUAL_CHOICE;
+    }
+
+    /**
+     * Video-aware route. The caller supplies a true model-availability check.
+     * A ready local-video path opens the native Wan laboratory, NEVER a fake
+     * still-photo-to-MP4 replacement. High-RAM hybrid auto preference is
+     * conservative; a user can still choose local explicitly.
+     */
+    public static Decision decide(Mode mode, boolean video, boolean imageEngineInstalled,
+                                  boolean imageModelImported, long availableRamBytes,
+                                  boolean videoEngineAndModelsInstalled) {
+        if (!video) return decide(mode, false, imageEngineInstalled, imageModelImported, availableRamBytes);
+        if (mode == Mode.ONLINE) return Decision.ONLINE_CONFIRM;
+        if (mode == Mode.LOCAL)
+            return videoEngineAndModelsInstalled ? Decision.LOCAL_VIDEO : Decision.UNSUPPORTED_LOCAL_VIDEO;
+        if (videoEngineAndModelsInstalled && availableRamBytes >= 5L * 1024 * 1024 * 1024)
+            return Decision.LOCAL_VIDEO;
         return Decision.MANUAL_CHOICE;
     }
 
