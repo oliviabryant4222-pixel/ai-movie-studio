@@ -125,8 +125,9 @@ public final class AutoModelDownloadService extends Service {
                 state="paused";
                 message="Paused. Tap install again to resume.";
             }catch(Throwable error){
-                state="failed";
-                message=error.getMessage()==null?error.toString():error.getMessage();
+                state=cancel.get()?"paused":"failed";
+                message=cancel.get()?"Paused. Tap install to resume.":
+                    (error.getMessage()==null?error.toString():error.getMessage());
             }finally{
                 HttpURLConnection active=currentConnection;
                 if(active!=null)active.disconnect();
@@ -228,15 +229,17 @@ public final class AutoModelDownloadService extends Service {
             part.delete();
             throw new SecurityException("Model SHA-256 mismatch. Corrupt download deleted; try a trusted connection.");
         }
-        ModelFileInspector.Result header=ModelFileInspector.inspect(part);
-        if(!header.plausible){
-            part.delete();
-            throw new IllegalStateException("Model container header rejected: "+header.detail);
-        }
         if(target.exists()&&!target.delete())
             throw new IllegalStateException("Cannot replace older auto-downloaded model");
         if(!part.renameTo(target))
             throw new IllegalStateException("Model copy downloaded but could not be activated");
+        // Check .gguf after rename: .gguf.part is intentionally not a valid
+        // extension for the generic checkpoint inspector.
+        ModelFileInspector.Result header=ModelFileInspector.inspect(target);
+        if(!header.plausible){
+            target.delete();
+            throw new IllegalStateException("Model container header rejected: "+header.detail);
+        }
         String previous=getSharedPreferences("realframe_local_sd",MODE_PRIVATE).getString("modelPath","");
         getSharedPreferences("realframe_local_sd",MODE_PRIVATE)
             .edit().putString("modelPath",target.getAbsolutePath()).commit();
