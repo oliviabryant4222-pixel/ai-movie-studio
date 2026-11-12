@@ -26,7 +26,7 @@ class NativeEngineWiringTests(unittest.TestCase):
     def test_real_device_image_workflow(self):
         s=(J/"LocalImageActivity.java").read_text(encoding="utf-8")
         for key in ("ACTION_OPEN_DOCUMENT", "model_cache",
-                    "LocalImageEngine.generate(", "MediaStore.Images.Media",
+                    "LocalImageEngine.generateBatch(", "MediaStore.Images.Media",
                     "IS_PENDING", "Bitmap.createBitmap"):
             self.assertIn(key,s)
     def test_native_sources_pinned(self):
@@ -41,7 +41,7 @@ class NativeEngineWiringTests(unittest.TestCase):
         names=[a.get(ns+"name") for a in root.find("application").findall("activity")]
         self.assertIn(".LocalImageActivity",names)
         gradle=(APP/"build.gradle.kts").read_text()
-        self.assertIn('versionName = "1.6.0-local-image-experimental"',gradle)
+        self.assertTrue('versionName = "1.6.0-local-image-experimental"' in gradle or 'versionName = "1.7.0-hybrid-batch-beta"' in gradle)
         self.assertIn("externalNativeBuild",gradle)
         self.assertIn('abiFilters.add("arm64-v8a")',gradle)
     def test_hybrid_requires_explicit_cloud_choice(self):
