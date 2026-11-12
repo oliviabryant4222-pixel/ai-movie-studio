@@ -24,10 +24,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: '8.9'
-      - name: Android SDK
-        uses: android-actions/setup-android@v3
-      - name: SDK 35 + Build Tools
-        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+      - name: SDK 35 + Build Tools (using runner preinstalled SDK)
+        run: |
+          echo "ANDROID_HOME=$ANDROID_HOME"
+          yes | sdkmanager --licenses >/dev/null || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
       - name: Run 25 Python integration tests
         working-directory: realframe
         run: python3 -m unittest discover -s tests -v
