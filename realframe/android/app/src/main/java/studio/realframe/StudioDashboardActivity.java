@@ -95,8 +95,8 @@ public final class StudioDashboardActivity extends Activity {
     }
     private void engineInfo(){
         new AlertDialog.Builder(this)
-            .setTitle("Offline AI engine — not yet bundled")
-            .setMessage("Your phone supports local SDXL-class image generation in compatible open-source projects, but RealFrame does not yet contain an on-device diffusion inference engine or downloaded model. Offline Photo Lab and video editing work now. Online AI generation works with a provider's available quota. A real self-contained offline model needs licensed native runtime integration plus GB-scale models.")
+            .setTitle("Offline image engine — experimental")
+            .setMessage("This build includes a CPU-only stable-diffusion.cpp image inference library. Import a compatible SD checkpoint first; CPU diffusion can be extremely slow or exhaust phone RAM. Qualcomm QNN/NPU acceleration and native offline video inference remain unavailable.")
             .setPositiveButton("Got it",null).show();
     }
     @Override public void onCreate(Bundle b){
@@ -118,7 +118,7 @@ public final class StudioDashboardActivity extends Activity {
         put(name,label("REALFRAME",21,WHITE,true));
         put(name,label("AI  /  MOVIE STUDIO",11,MUTED,true));
         top.addView(name,new LinearLayout.LayoutParams(0,-2,1));
-        TextView badge=label("BETA 1.5",11,CYAN,true);
+        TextView badge=label("BETA 1.6",11,CYAN,true);
         badge.setGravity(Gravity.CENTER);badge.setBackground(shape(0xFF172C37,12));
         top.addView(badge,new LinearLayout.LayoutParams(dp(88),dp(35)));
         shell.addView(top);
@@ -185,6 +185,9 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout modes=card(content,CARD);
         tile(modes,"⇄","Hybrid Studio","Switch between online generation and offline post-production",CYAN,()->render("Hybrid"));
         tile(modes,"☷","Model & Mode Manager","Register downloaded models; inspect local engine status",ACCENT,()->open(ModelManagerActivity.class));
+        heading("On-device generation & editing","Experimental local AI, no cloud upload");
+        LinearLayout localAi=card(content,CARD);
+        tile(localAi,"◉","LOCAL AI Image (CPU beta)","On-device SD generation; import checkpoint first",CYAN,()->open(LocalImageActivity.class));
         heading("Offline workspace","Available without internet or a cloud account");
         LinearLayout offline=card(content,CARD);
         tile(offline,"◈","Photo Lab","Enhance a photo and export JPG offline",CYAN,()->open(OfflinePhotoLabActivity.class));
@@ -195,7 +198,7 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout banner=card(content,0xFF223047);
         put(banner,label("LOCAL AI MODEL STATUS",12,0xFFF5CE8E,true));
         gap(banner,7);
-        put(banner,label("Native offline AI generation is not installed in this build. Photo editing and clip assembly work offline.",13,WHITE,false));
+        put(banner,label("CPU text-to-image available with a supported imported model. No bundled model weights. Offline video AI and Snapdragon NPU acceleration are not included.",13,WHITE,false));
         gap(banner,10);
         TextView detail=label("View engine requirements  →",13,CYAN,true);
         detail.setOnClickListener(v->engineInfo());put(banner,detail);
@@ -214,6 +217,7 @@ public final class StudioDashboardActivity extends Activity {
     private void drawOffline(){
         heading("Create offline","No internet required for local photo and video editing");
         LinearLayout mode=card(content,CARD);
+        tile(mode,"◉","Local AI Image (CPU beta)","Runs fully on phone when checkpoint is imported",CYAN,()->open(LocalImageActivity.class));
         tile(mode,"◈","Photo Lab","Adjust brightness, contrast & saturation; save JPG",CYAN,()->open(OfflinePhotoLabActivity.class));
         tile(mode,"▧","Still Image → MP4","Export a silent video from a photo",CYAN,()->open(OfflineImageVideoActivity.class));
         tile(mode,"▤","Clip Timeline","Import video clips and merge into MP4",ACCENT,()->advanced("Clips"));
@@ -221,16 +225,31 @@ public final class StudioDashboardActivity extends Activity {
         tile(mode,"◷","Long-video planner","Export scene prompts and continuity graph",ACCENT,()->open(ProductionPlannerActivity.class));
         tile(mode,"▣","Storyboard & jobs","Manage project jobs and retry failed renders",ACCENT,()->advanced("Storyboard"));
         LinearLayout status=card(content,0xFF30263A);
-        put(status,label("OFFLINE AI RENDERING: NOT READY",13,0xFFFFC582,true));
+        put(status,label("LOCAL TEXT-TO-IMAGE: EXPERIMENTAL",13,0xFFFFC582,true));
         gap(status,9);
-        put(status,label("Photorealistic text-to-image/text-to-video offline requires a native model runtime and separate model files. Not included yet. We will not label ordinary photo edits as AI generation.",13,WHITE,false));
+        put(status,label("Native CPU stable-diffusion.cpp is included, but images need a compatible downloaded model and may be slow or OOM. This CPU pipeline has not been benchmarked on your Samsung. Offline AI video is not available.",13,WHITE,false));
         gap(status,11);
         TextView info=label("Why? See hardware + model requirements  →",13,CYAN,true);
         info.setOnClickListener(v->engineInfo());put(status,info);
     }
+    private void chooseHybrid(){
+        new AlertDialog.Builder(this)
+            .setTitle("Choose your AI image engine")
+            .setItems(new String[]{
+                "LOCAL • This phone CPU, downloaded model required",
+                "ONLINE • Cloud AI, uploads/prompt leave this phone"
+            },(dialog,choice)->{
+                if(choice==0)open(LocalImageActivity.class);
+                else online("image");
+            })
+            .setNegativeButton("Cancel",null)
+            .show();
+    }
     private void drawHybrid(){
         heading("Hybrid Studio","Generate online, edit offline and keep projects in one place");
         LinearLayout mode=card(content,CARD);
+        tile(mode,"⇄","Choose local or online image","Explicit manual routing; local never sends your prompt",CYAN,()->chooseHybrid());
+        tile(mode,"◉","Local AI Image (CPU beta)","Runs on-device after model import",CYAN,()->open(LocalImageActivity.class));
         tile(mode,"✦","Generate online image","Remote image model; free provider quota",ACCENT,()->online("image"));
         tile(mode,"▶","Generate online video","Remote model; free provider quota",CYAN,()->online("video"));
         tile(mode,"▧","Offline image → MP4","Turn a saved still photo into an MP4 without AI",CYAN,()->open(OfflineImageVideoActivity.class));
@@ -240,7 +259,7 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout status=card(content,0xFF30263A);
         put(status,label("WHAT HYBRID DOES TODAY",13,0xFFFFC582,true));
         gap(status,9);
-        put(status,label("Online AI generation and offline post-production are working paths. One-click automatic scheduling between local AI inference and cloud models is NOT implemented, because the current APK has no native on-device AI engine. Model files alone do not enable generation.",13,WHITE,false));
+        put(status,label("Manual hybrid: choose where an image is generated. Local uses the phone CPU with a downloaded model; online uses a provider. Automatic routing and automatic online fallback are not supported. Offline AI video remains unavailable.",13,WHITE,false));
     }
 
 }
