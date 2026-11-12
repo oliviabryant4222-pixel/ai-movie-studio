@@ -118,7 +118,7 @@ public final class StudioDashboardActivity extends Activity {
         put(name,label("REALFRAME",21,WHITE,true));
         put(name,label("AI  /  MOVIE STUDIO",11,MUTED,true));
         top.addView(name,new LinearLayout.LayoutParams(0,-2,1));
-        TextView badge=label("BETA 1.4",11,CYAN,true);
+        TextView badge=label("BETA 1.5",11,CYAN,true);
         badge.setGravity(Gravity.CENTER);badge.setBackground(shape(0xFF172C37,12));
         top.addView(badge,new LinearLayout.LayoutParams(dp(88),dp(35)));
         shell.addView(top);
@@ -190,7 +190,8 @@ public final class StudioDashboardActivity extends Activity {
         tile(offline,"◈","Photo Lab","Enhance a photo and export JPG offline",CYAN,()->open(OfflinePhotoLabActivity.class));
         tile(offline,"▧","Still Image → MP4","Make a silent video clip offline, no AI motion",CYAN,()->open(OfflineImageVideoActivity.class));
         tile(offline,"▤","Clip Timeline","Import, arrange and join matching MP4s",ACCENT,()->advanced("Clips"));
-        tile(offline,"◷","Storyboard & batch queue","Plan long videos and manage queued jobs",0xFFFFC582,()->advanced("Storyboard"));
+        tile(offline,"◷","Long-video planner","Plan 5-second clips + character continuity",0xFFFFC582,()->open(ProductionPlannerActivity.class));
+        tile(offline,"◉","Advanced batch queue","Monitor and retry configured render jobs",ACCENT,()->advanced("Jobs"));
         LinearLayout banner=card(content,0xFF223047);
         put(banner,label("LOCAL AI MODEL STATUS",12,0xFFF5CE8E,true));
         gap(banner,7);
@@ -217,7 +218,8 @@ public final class StudioDashboardActivity extends Activity {
         tile(mode,"▧","Still Image → MP4","Export a silent video from a photo",CYAN,()->open(OfflineImageVideoActivity.class));
         tile(mode,"▤","Clip Timeline","Import video clips and merge into MP4",ACCENT,()->advanced("Clips"));
         tile(mode,"◇","Characters & references","Store character recipes and appearance notes",0xFFFFC582,()->advanced("Characters"));
-        tile(mode,"◷","Storyboard & jobs","Arrange scenes, save project, resume later",ACCENT,()->advanced("Storyboard"));
+        tile(mode,"◷","Long-video planner","Export scene prompts and continuity graph",ACCENT,()->open(ProductionPlannerActivity.class));
+        tile(mode,"▣","Storyboard & jobs","Manage project jobs and retry failed renders",ACCENT,()->advanced("Storyboard"));
         LinearLayout status=card(content,0xFF30263A);
         put(status,label("OFFLINE AI RENDERING: NOT READY",13,0xFFFFC582,true));
         gap(status,9);
@@ -233,6 +235,7 @@ public final class StudioDashboardActivity extends Activity {
         tile(mode,"▶","Generate online video","Remote model; free provider quota",CYAN,()->online("video"));
         tile(mode,"▧","Offline image → MP4","Turn a saved still photo into an MP4 without AI",CYAN,()->open(OfflineImageVideoActivity.class));
         tile(mode,"▤","Offline video assembler","Use downloaded/generated clips to create longer edits",ACCENT,()->advanced("Clips"));
+        tile(mode,"◷","Long-video production","Plan scenes, characters, continuity, export manifest",0xFFFFC582,()->open(ProductionPlannerActivity.class));
         tile(mode,"☷","Model manager & preferences","Store model path and pick online, local or hybrid",0xFFFFC582,()->open(ModelManagerActivity.class));
         LinearLayout status=card(content,0xFF30263A);
         put(status,label("WHAT HYBRID DOES TODAY",13,0xFFFFC582,true));
