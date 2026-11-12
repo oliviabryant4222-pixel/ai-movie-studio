@@ -192,7 +192,7 @@ Java_studio_realframe_LocalImageEngine_nativeGenerateBatch(
     params.negative_prompt=negative.c_str();
     params.width=width; params.height=height; params.batch_count=1;
     // Consistent, reproducible per-image seed series without signed overflow.
-    uint64_t seed0=static_cast<uint64_t>(seed < 0 ? -(seed + 1) + 1 : seed);
+    uint64_t seed0=static_cast<uint64_t>(seed);
     params.seed=1+static_cast<int64_t>((seed0+static_cast<uint64_t>(i)*104729ULL)%2147483646ULL);
     params.sample_params.sample_steps=steps;
     sd_image_generation_result_t* result=nullptr;
