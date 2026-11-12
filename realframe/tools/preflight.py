@@ -27,8 +27,8 @@ def main() -> None:
     gradle = gradle_path.read_text(encoding='utf-8')
     for key in ['compileSdk = 35', 'targetSdk = 35']:
         require(key in gradle, f'App gradle missing {key}')
-    require(any(v in gradle for v in ['versionName = "1.1.0-test"', 'versionName = "1.2.0-beta"', 'versionName = "1.3.0-beta"', 'versionName = "1.4.0-beta"', 'versionName = "1.5.0-beta"', 'versionName = "1.6.0-local-image-experimental"', 'versionName = "1.7.0-hybrid-batch-beta"']), 'Unexpected versionName')
-    require(any(v in gradle for v in ['applicationId = "studio.realframe.beta"', 'applicationId = "studio.realframe.v12"', 'applicationId = "studio.realframe.v13"', 'applicationId = "studio.realframe.v14"', 'applicationId = "studio.realframe.v15"', 'applicationId = "studio.realframe.v16"', 'applicationId = "studio.realframe.v17"']),
+    require(any(v in gradle for v in ['versionName = "1.1.0-test"', 'versionName = "1.2.0-beta"', 'versionName = "1.3.0-beta"', 'versionName = "1.4.0-beta"', 'versionName = "1.5.0-beta"', 'versionName = "1.6.0-local-image-experimental"', 'versionName = "1.7.0-hybrid-batch-beta"', 'versionName = "1.8.0-local-video-experimental"']), 'Unexpected versionName')
+    require(any(v in gradle for v in ['applicationId = "studio.realframe.beta"', 'applicationId = "studio.realframe.v12"', 'applicationId = "studio.realframe.v13"', 'applicationId = "studio.realframe.v14"', 'applicationId = "studio.realframe.v15"', 'applicationId = "studio.realframe.v16"', 'applicationId = "studio.realframe.v17"', 'applicationId = "studio.realframe.v18"']),
             'Unexpected applicationId: verify package/manifest before publishing')
 
     root = ET.parse(manifest_path).getroot()
@@ -50,7 +50,7 @@ def main() -> None:
 
     base = ANDROID/'app/src/main/java/studio/realframe'
     required = ['MainActivity.java','RenderService.java','Renderer.java', 'StudioStore.java',
-                'SecretVault.java','ClipStitcher.java','MediaSignature.java', 'WebStudioActivity.java', 'StudioDashboardActivity.java', 'OfflinePhotoLabActivity.java', 'OfflineImageVideoActivity.java', 'ModelManagerActivity.java', 'ProductionPlannerActivity.java', 'LocalImageActivity.java', 'LocalImageEngine.java', 'UnifiedCreateActivity.java', 'HybridRoutePolicy.java']
+                'SecretVault.java','ClipStitcher.java','MediaSignature.java', 'WebStudioActivity.java', 'StudioDashboardActivity.java', 'OfflinePhotoLabActivity.java', 'OfflineImageVideoActivity.java', 'ModelManagerActivity.java', 'ProductionPlannerActivity.java', 'LocalImageActivity.java', 'LocalImageEngine.java', 'UnifiedCreateActivity.java', 'HybridRoutePolicy.java', 'LocalVideoEngine.java', 'LocalVideoActivity.java', 'LocalVideoEncoder.java']
     for name in required:
         path = base / name
         require(path.is_file(), f'Missing Java file: {name}')
