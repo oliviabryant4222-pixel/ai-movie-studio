@@ -42,7 +42,8 @@ public final class MainActivity extends Activity {
         super.onCreate(state);
         store = new StudioStore(this); prefs = new SecretVault(this);
         renderer = new Renderer(this, prefs);
-        showHome();
+        String entry = getIntent().getStringExtra("open_tab");
+        if (entry == null || entry.isEmpty()) showHome(); else navigate(entry);
         if (android.os.Build.VERSION.SDK_INT >= 33 &&
                 checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) !=
                         android.content.pm.PackageManager.PERMISSION_GRANTED) {
@@ -80,9 +81,18 @@ public final class MainActivity extends Activity {
         s.setAdapter(adapter); page.addView(s); return s;
     }
     private Button button(String label, Runnable fn) {
-        Button b = new Button(this); b.setText(label);
+        Button b = new Button(this);
+        b.setText(label); b.setTextSize(14); b.setAllCaps(false);
+        b.setTextColor(Color.WHITE);
+        android.graphics.drawable.GradientDrawable d = new android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{0xFF5B4CCB, 0xFF3C89A3});
+        d.setCornerRadius(dp(14)); b.setBackground(d);
+        b.setMinHeight(dp(50));
+        b.setPadding(dp(12), dp(8), dp(12), dp(8));
         b.setOnClickListener(v -> { try { fn.run(); } catch (Exception e) { notifyUser(e.getMessage()); } });
-        page.addView(b, new LinearLayout.LayoutParams(-1,-2)); return b;
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1,-2);
+        lp.setMargins(0,dp(5),0,dp(5)); page.addView(b, lp); return b;
     }
     private void sep() {
         View line = new View(this); line.setBackgroundColor(Color.rgb(222,225,231));
@@ -92,26 +102,37 @@ public final class MainActivity extends Activity {
     private void layout(String tab) {
         activeTab = tab;
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(12), dp(16), dp(12), dp(6));
-        root.setBackgroundColor(Color.rgb(249,249,251)); setContentView(root);
-        TextView header = text("REALFRAME  ·  AI STUDIO  1.2", 17);
+        root.setPadding(dp(14), dp(14), dp(14), dp(6));
+        root.setBackgroundColor(0xFF0B1120); setContentView(root);
+        TextView header = text("REALFRAME  /  STUDIO  1.3", 19);
+        header.setTextColor(Color.WHITE);
         header.setTypeface(null, 1); root.addView(header);
         HorizontalScrollView menuScroll = new HorizontalScrollView(this);
         LinearLayout menu = new LinearLayout(this); menu.setOrientation(LinearLayout.HORIZONTAL);
-        String[] tabs = {"Home", "Free AI", "Generate", "Characters", "Storyboard", "Jobs", "Clips", "Settings"};
+        String[] tabs = {"Dashboard", "Free AI", "Generate", "Characters", "Storyboard", "Jobs", "Clips", "Settings"};
         for (String name : tabs) {
             Button b = new Button(this); b.setText(name); b.setTextSize(12);
-            b.setAllCaps(false); b.setOnClickListener(v -> navigate(name));
-            menu.addView(b, new LinearLayout.LayoutParams(-2,dp(48)));
+            b.setAllCaps(false); b.setTextColor(0xFFDBE8F7);
+            android.graphics.drawable.GradientDrawable bg = new android.graphics.drawable.GradientDrawable();
+            bg.setColor(name.equals(tab) ? 0xFF5845A1 : 0xFF202C42);
+            bg.setCornerRadius(dp(16)); b.setBackground(bg);
+            b.setPadding(dp(14),dp(5),dp(14),dp(5));
+            b.setOnClickListener(v -> navigate(name));
+            LinearLayout.LayoutParams tabLp = new LinearLayout.LayoutParams(-2,dp(42));
+            tabLp.setMargins(dp(3),dp(4),dp(3),dp(7)); menu.addView(b, tabLp);
         }
         menuScroll.addView(menu); root.addView(menuScroll);
         ScrollView scroll = new ScrollView(this);
         page = new LinearLayout(this); page.setOrientation(LinearLayout.VERTICAL);
-        page.setPadding(0,dp(10),0,dp(24)); scroll.addView(page);
+        page.setPadding(dp(14),dp(12),dp(14),dp(26));
+        android.graphics.drawable.GradientDrawable paper = new android.graphics.drawable.GradientDrawable();
+        paper.setColor(0xFFF9FAFF); paper.setCornerRadius(dp(19)); page.setBackground(paper);
+        scroll.addView(page);
         root.addView(scroll, new LinearLayout.LayoutParams(-1,0,1));
     }
     private void navigate(String tab) {
         switch (tab) {
+            case "Dashboard": startActivity(new Intent(this, StudioDashboardActivity.class)); break;
             case "Free AI": openFreeStudio("image"); break;
             case "Connect AI": showConnect(); break;
             case "Generate": showGenerate(); break;
