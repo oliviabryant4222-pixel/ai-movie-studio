@@ -151,7 +151,8 @@ Java_studio_realframe_LocalImageEngine_nativeGenerateBatch(
     jint batchCount, jobject sink) {
   if(width < 64 || height < 64 || width > 1024 || height > 1024 ||
      (width % 64) || (height % 64) || steps < 1 || steps > 100 ||
-     threads < 1 || threads > 8 || batchCount < 1 || batchCount > 8 || !sink) {
+     threads < 1 || threads > 8 || batchCount < 1 || batchCount > 8 ||
+     seed < 1 || seed > 2147483647LL || !sink) {
     javaError(env,"Invalid batch input or callback");return 0;
   }
   auto model=asText(env,j_model), prompt=asText(env,j_prompt), negative=asText(env,j_negative);
@@ -192,8 +193,8 @@ Java_studio_realframe_LocalImageEngine_nativeGenerateBatch(
     params.negative_prompt=negative.c_str();
     params.width=width; params.height=height; params.batch_count=1;
     // Consistent, reproducible per-image seed series without signed overflow.
-    uint64_t seed0=static_cast<uint64_t>(seed);
-    params.seed=1+static_cast<int64_t>((seed0+static_cast<uint64_t>(i)*104729ULL)%2147483646ULL);
+    uint64_t seed0=static_cast<uint64_t>(seed - 1);
+    params.seed=1+static_cast<int64_t>((seed0+static_cast<uint64_t>(i)*104729ULL)%2147483647ULL);
     params.sample_params.sample_steps=steps;
     sd_image_generation_result_t* result=nullptr;
     bool success=generate_image(ptr,&params,&result);
