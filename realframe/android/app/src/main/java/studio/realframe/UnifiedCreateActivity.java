@@ -103,7 +103,7 @@ public final class UnifiedCreateActivity extends Activity {
         for(int i=1;i<names.length;i++)names[i]=presets.get(i).optString("name","Character "+i);
         character=choose(p,"CHARACTER VAULT",names);
         gap(p,12);
-        put(p,label("For local images, import a compatible SD1.5 checkpoint first. Image batches are CPU-only and can take considerable time. Local AI video is not supported.",13,DIM,false));
+        put(p,label("For local images, import a compatible SD1.5 checkpoint first. Image batches are CPU-only and can take considerable time. Local AI video is now experimental: download/import Wan T2V diffusion, T5 and VAE files (multi-GB). Cloud remains available.",13,DIM,false));
         button(p,"✦  CREATE",0xFF6051BB,this::create);
         button(p,"☷  MODEL MANAGER",0xFF25776E,()->startActivity(new Intent(this,ModelManagerActivity.class)));
         gap(p,10);
@@ -142,39 +142,45 @@ public final class UnifiedCreateActivity extends Activity {
         ActivityManager.MemoryInfo memory=new ActivityManager.MemoryInfo();
         manager.getMemoryInfo(memory);
         HybridRoutePolicy.Decision decision=HybridRoutePolicy.decide(chosen,video,
-            LocalImageEngine.isAvailable(),model.isFile(),memory.availMem);
+            LocalImageEngine.isAvailable(),model.isFile(),memory.availMem,
+            LocalVideoEngine.isAvailable() && LocalVideoActivity.isConfigured(this));
         switch(decision){
             case LOCAL_IMAGE:
                 local(completed);
+                break;
+            case LOCAL_VIDEO:
+                localVideo(completed);
                 break;
             case ONLINE_CONFIRM:
                 confirmCloud(completed,video);
                 break;
             case UNSUPPORTED_LOCAL_VIDEO:
                 new AlertDialog.Builder(this)
-                    .setTitle("Offline AI video is not available")
-                    .setMessage("Local mode cannot generate diffusion video yet. You can assemble existing clips without internet, or explicitly switch to Online for hosted AI video.")
-                    .setPositiveButton("Clip Editor",(d,w)->{
-                        Intent intent=new Intent(this,MainActivity.class);
-                        intent.putExtra("open_tab","Clips");startActivity(intent);
-                    })
+                    .setTitle("Local Wan video model not configured")
+                    .setMessage("An experimental on-device CPU Wan T2V engine is included. Import diffusion model, T5 and VAE components before attempting real local AI video. Large video models may exhaust phone RAM. Nothing is uploaded.")
+                    .setPositiveButton("Open Local Video Lab",(d,w)->localVideo(completed))
                     .setNegativeButton("Cancel",null).show();
                 break;
             default:
                 new AlertDialog.Builder(this)
                     .setTitle("Choose generation engine")
                     .setMessage(video ?
-                        "Local AI video is not installed. Open an online video model only with your consent, or continue with the offline clip editor." :
+                        "Local Wan CPU video inference is experimental, and a compatible multi-GB model pack may exceed available phone RAM. Open the Local Video Lab to try it, or explicitly consent to an online provider." :
                         "A local checkpoint, native library, or enough free RAM is missing. You can open the local importer or explicitly choose a hosted model.")
                     .setPositiveButton("Use Online AI",(d,w)->confirmCloud(completed,video))
-                    .setNeutralButton(video?"Open Clip Editor":"Use Local Image",(d,w)->{
-                        if(video){
-                            Intent edit=new Intent(this,MainActivity.class);edit.putExtra("open_tab","Clips");
-                            startActivity(edit);
-                        }else local(completed);
+                    .setNeutralButton(video?"Try Local Video":"Use Local Image",(d,w)->{
+                        if(video)localVideo(completed);
+                        else local(completed);
                     })
                     .setNegativeButton("Cancel",null).show();
         }
+    }
+    private void localVideo(String fullPrompt){
+        Intent i=new Intent(this,LocalVideoActivity.class);
+        i.putExtra("prompt",fullPrompt);
+        i.putExtra("negative",negative.getText().toString());
+        i.putExtra("seed",seed.getText().toString().trim());
+        startActivity(i);
     }
     private void local(String fullPrompt){
         Intent i=new Intent(this,LocalImageActivity.class);
