@@ -498,9 +498,16 @@ public final class LocalApiService extends Service {
                         throw new IllegalStateException("No native Wan video frames completed");
                     // A partial clip can still be saved, but mark it cancelled.
                     Uri completed=video[0].finish();
+                    VideoOutputVerifier.Result verified=VideoOutputVerifier.verify(this,
+                        completed,Math.min(delivered,5));
+                    if(!verified.valid){
+                        getContentResolver().delete(completed,null,null);
+                        throw new IllegalStateException("Generated MP4 failed readback: "+verified.detail);
+                    }
                     synchronized(job.saved){job.saved.add(completed);}
                     job.state=delivered==count?"completed":"cancelled";
-                    if(delivered!=count)job.error="Only "+delivered+" video frames were generated";
+                    if(delivered!=count)job.error="Only "+delivered+" of "+count+
+                        " native video frames generated; valid partial MP4 saved";
                 }finally{if(video[0]!=null)video[0].close();}
             }
         }catch(Throwable ex){
