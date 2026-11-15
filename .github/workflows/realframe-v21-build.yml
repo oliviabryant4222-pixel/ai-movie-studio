@@ -41,6 +41,12 @@ jobs:
           mkdir -p /tmp/realframe-hybrid-policy-tests
           javac -d /tmp/realframe-hybrid-policy-tests android/app/src/main/java/studio/realframe/HybridRoutePolicy.java tests/TestHybridRoutePolicy.java
           java -cp /tmp/realframe-hybrid-policy-tests TestHybridRoutePolicy
+      - name: Confirm local model probe never labels failed renders as verified
+        working-directory: realframe
+        run: |
+          mkdir -p /tmp/realframe-probe-tests
+          javac -d /tmp/realframe-probe-tests android/app/src/main/java/studio/realframe/LocalInferenceProbe.java tests/TestLocalInferenceProbe.java
+          java -cp /tmp/realframe-probe-tests TestLocalInferenceProbe
       - name: Local API authentication and request guard tests (pure Java)
         working-directory: realframe
         run: |
