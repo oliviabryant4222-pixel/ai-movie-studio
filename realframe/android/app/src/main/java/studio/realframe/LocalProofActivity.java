@@ -162,10 +162,18 @@ public final class LocalProofActivity extends Activity {
                 String report=LocalInferenceProbe.summary(verdict)+"\n"+
                     "Native 256×256 image: SUCCESS; 4 steps; "+seconds+" seconds."+
                     "\nThis verifies a local render in this test, not Wan video, NPU acceleration or zero network traffic by other apps.";
-                getSharedPreferences("realframe_local_proof",MODE_PRIVATE).edit()
+                android.content.SharedPreferences.Editor proof=
+                    getSharedPreferences("realframe_local_proof",MODE_PRIVATE).edit()
                     .putString("last_result",verdict.name())
                     .putLong("last_duration_sec",seconds)
-                    .putLong("last_success_ms",System.currentTimeMillis()).apply();
+                    .putLong("last_success_ms",System.currentTimeMillis());
+                // Keep separate evidence for on-device render with and without Internet.
+                // A network transition never counts as either stable test mode.
+                if(verdict==LocalInferenceProbe.Result.LOCAL_WITH_INTERNET)
+                    proof.putBoolean("local_while_online_verified",true);
+                if(verdict==LocalInferenceProbe.Result.LOCAL_WITHOUT_INTERNET)
+                    proof.putBoolean("fully_offline_verified",true);
+                proof.apply();
                 runOnUiThread(()->{
                     if(isFinishing()||isDestroyed())return;
                     preview.setImageBitmap(bitmap);
