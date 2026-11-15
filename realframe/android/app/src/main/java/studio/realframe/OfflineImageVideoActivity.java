@@ -55,7 +55,7 @@ public final class OfflineImageVideoActivity extends Activity {
         b.setBackground(shape(color));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(48));
         lp.topMargin=dp(12);root.addView(b,lp);
-        b.setOnClickListener(v->run.run());return b;
+        StudioUi.styleButton(this,b,color,s,run);return b;
     }
     @Override public void onCreate(Bundle b) {
         super.onCreate(b);
@@ -64,7 +64,7 @@ public final class OfflineImageVideoActivity extends Activity {
         root.setBackgroundColor(BG);root.setPadding(dp(18),dp(24),dp(18),dp(14));
         setContentView(root);
         TextView heading=text("←   Offline Photo → MP4",22,FORE,true);
-        heading.setOnClickListener(v->finish());root.addView(heading);
+        StudioUi.bind(this,heading,"Back to studio",this::finish);root.addView(heading);
         TextView info=text("Convert a still image into a silent video clip entirely on your phone. No AI motion generation or internet.",13,SUB,false);
         info.setPadding(0,dp(10),0,dp(19));root.addView(info);
         preview=new ImageView(this);preview.setScaleType(ImageView.ScaleType.FIT_CENTER);
