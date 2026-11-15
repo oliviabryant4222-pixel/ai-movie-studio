@@ -17,7 +17,7 @@ import android.widget.LinearLayout;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-/** RealFrame dashboard v1.3. Offline tools are clearly distinct from cloud AI inference. */
+/** RealFrame 2.5 premium responsive home. Native local and hosted workflows stay distinct. */
 public final class StudioDashboardActivity extends Activity {
     private static final int BG=0xFF090F1C, CARD=0xFF151F30, WHITE=0xFFF4F6FC;
     private static final int MUTED=0xFFA2B0C7, ACCENT=0xFFB39CFF, CYAN=0xFF5CE1D3;
@@ -63,7 +63,7 @@ public final class StudioDashboardActivity extends Activity {
     }
     private View actionTile(String glyph,String title,String subtitle,int accent,Runnable action){
         LinearLayout row=horizontal();row.setPadding(dp(11),dp(13),dp(10),dp(13));
-        row.setBackground(shape(0xFF202C41,15));
+        StudioUi.styleTile(this,row,title+" — "+subtitle,action);
         TextView icon=label(glyph,23,accent,true);
         icon.setGravity(Gravity.CENTER);
         icon.setBackground(shape(0xFF2B3A52,13));
@@ -76,7 +76,6 @@ public final class StudioDashboardActivity extends Activity {
         row.addView(texts,new LinearLayout.LayoutParams(0,-2,1));
         TextView arrow=label("›",29,accent,true);
         row.addView(arrow,new LinearLayout.LayoutParams(dp(22),dp(46)));
-        row.setOnClickListener(v->action.run());
         return row;
     }
     private void tile(LinearLayout parent,String glyph,String title,String subtitle,int accent,Runnable action){
@@ -84,7 +83,7 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,-2);
         lp.bottomMargin=dp(10);parent.addView(tile,lp);
     }
-    private void open(Class<? extends Activity> cls){startActivity(new Intent(this,cls));}
+    private void open(Class<? extends Activity> cls){StudioUi.open(this,cls);}
     private void online(String kind){
         Intent i=new Intent(this,WebStudioActivity.class);
         i.putExtra("kind",kind);startActivity(i);
@@ -103,7 +102,13 @@ public final class StudioDashboardActivity extends Activity {
         super.onCreate(b);
         getWindow().setStatusBarColor(BG); getWindow().setNavigationBarColor(BG);
         if(Build.VERSION.SDK_INT>=26) getWindow().getDecorView().setSystemUiVisibility(0);
-        render("Home");
+        render(b==null?"Home":b.getString("section","Home"));
+    }
+    @Override protected void onSaveInstanceState(Bundle out){
+        out.putString("section",section);super.onSaveInstanceState(out);
+    }
+    @Override public void onBackPressed(){
+        if(!"Home".equals(section))render("Home");else super.onBackPressed();
     }
     private void render(String mode){
         section=mode;
@@ -118,7 +123,7 @@ public final class StudioDashboardActivity extends Activity {
         put(name,label("REALFRAME",21,WHITE,true));
         put(name,label("AI  /  MOVIE STUDIO",11,MUTED,true));
         top.addView(name,new LinearLayout.LayoutParams(0,-2,1));
-        TextView badge=label("v2.4",11,CYAN,true);
+        TextView badge=label("v2.5",11,CYAN,true);
         badge.setGravity(Gravity.CENTER);badge.setBackground(shape(0xFF172C37,12));
         top.addView(badge,new LinearLayout.LayoutParams(dp(88),dp(35)));
         shell.addView(top);
@@ -130,26 +135,29 @@ public final class StudioDashboardActivity extends Activity {
         scroll.addView(content);
         shell.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
 
+        View divider=new View(this);divider.setBackgroundColor(0xFF30425C);
+        shell.addView(divider,new LinearLayout.LayoutParams(-1,dp(1)));
         LinearLayout bottom=horizontal();
-        bottom.setPadding(dp(8),dp(9),dp(8),dp(9));
+        bottom.setPadding(dp(8),dp(7),dp(8),dp(7));
         bottom.setBackgroundColor(0xFF11192A);
         String[] items={"Home","Online","Offline","Hybrid","Vault","Editor"};
         String[] icons={"⌂","✧","◈","⇄","◇","▤"};
         for(int i=0;i<items.length;i++){
             final String next=items[i];
             LinearLayout tab=vertical();tab.setGravity(Gravity.CENTER);
-            TextView ico=label(icons[i],23,next.equals(mode)?ACCENT:MUTED,true);
+            TextView ico=label(icons[i],22,next.equals(mode)?CYAN:MUTED,true);
             ico.setGravity(Gravity.CENTER);
             put(tab,ico);
             TextView caption=label(next,10,next.equals(mode)?WHITE:MUTED,next.equals(mode));
             caption.setGravity(Gravity.CENTER);
             put(tab,caption);
-            tab.setOnClickListener(v->{
+            if(next.equals(mode))tab.setBackground(StudioUi.surface(this,0xFF263955,12));
+            StudioUi.bind(this,tab,"Open "+next+" tab",()->{
                 if("Vault".equals(next))advanced("Characters");
                 else if("Editor".equals(next))advanced("Clips");
-                else render(next);
+                else if(!next.equals(section))render(next);
             });
-            bottom.addView(tab,new LinearLayout.LayoutParams(0,dp(53),1));
+            bottom.addView(tab,new LinearLayout.LayoutParams(0,dp(60),1));
         }
         shell.addView(bottom);
 
@@ -164,9 +172,9 @@ public final class StudioDashboardActivity extends Activity {
         hero.setBackground(gradient(0xFF493484,0xFF203F65,24));
         LinearLayout.LayoutParams heroLp=new LinearLayout.LayoutParams(-1,-2);
         heroLp.topMargin=dp(14);content.addView(hero,heroLp);
-        put(hero,label("YOUR CREATIVE WORKSPACE",11,0xFFC8E8FF,true));
+        put(hero,label("YOUR CREATIVE WORKSPACE  •  v2.5",11,0xFFC8E8FF,true));
         gap(hero,11);
-        put(hero,label("One studio.\nThree creative modes.",30,WHITE,true));
+        put(hero,label("Create anything.\nKeep control.",30,WHITE,true));
         gap(hero,9);
         put(hero,label("LOCAL OFFLINE  •  LOCAL WHILE ONLINE\nCLOUD ONLINE  •  HYBRID — all in one app",13,0xFFE0E5F4,false));
         gap(hero,15);
@@ -174,10 +182,27 @@ public final class StudioDashboardActivity extends Activity {
         chip.setGravity(Gravity.CENTER);
         chip.setBackground(shape(CYAN,10));
         hero.addView(chip,new LinearLayout.LayoutParams(dp(185),dp(37)));
+        gap(hero,15);
+        LinearLayout shortcuts=horizontal();
+        TextView create=label("✦  NEW IMAGE",13,WHITE,true);
+        create.setGravity(Gravity.CENTER);create.setBackground(StudioUi.ripple(this,
+            StudioUi.gradient(this,0xFF7255DE,0xFF4432A0,13),13));
+        StudioUi.bind(this,create,"Create AI image",()->open(UnifiedCreateActivity.class));
+        LinearLayout.LayoutParams first=new LinearLayout.LayoutParams(0,dp(48),1);
+        first.rightMargin=dp(8);shortcuts.addView(create,first);
+        TextView film=label("▶  NEW VIDEO",13,WHITE,true);
+        film.setGravity(Gravity.CENTER);film.setBackground(StudioUi.ripple(this,
+            StudioUi.gradient(this,0xFF188C8B,0xFF145D79,13),13));
+        StudioUi.bind(this,film,"Create AI video",()->open(LocalVideoActivity.class));
+        shortcuts.addView(film,new LinearLayout.LayoutParams(0,dp(48),1));
+        hero.addView(shortcuts,new LinearLayout.LayoutParams(-1,dp(48)));
     }
     private void drawHome(){
         hero();
-        heading("ONE-TAP LOCAL AI SETUP","App installs the open-source image model automatically");
+        String modelReady=AutoModelDownloadService.installed(this) && LocalImageEngine.isAvailable() ?
+            "Local model and engine installed • physical generation test available" :
+            "Get ready in one tap • native local image model required";
+        heading("ONE-TAP LOCAL AI SETUP",modelReady);
         LinearLayout setup=card(content,CARD);
         tile(setup,"✦","GET LOCAL AI READY","No manual AI files, apps, or API keys",CYAN,()->open(QuickStartActivity.class));
         tile(setup,"▣","Device Health & Model Storage","Check phone inference; safely remove automatic weights",ACCENT,()->open(StudioHealthActivity.class));
@@ -248,7 +273,7 @@ public final class StudioDashboardActivity extends Activity {
         LinearLayout creator=card(content,CARD);
         tile(creator,"✦","Unified Creator","Choose Local mode and use a character preset",ACCENT,()->open(UnifiedCreateActivity.class));
         LinearLayout mode=card(content,CARD);
-        tile(mode,"◉","Local AI Image Batch (CPU beta)","1–4 images, automatically saved to gallery",CYAN,()->open(LocalImageActivity.class));
+        tile(mode,"◉","Local AI Image Batch (CPU beta)","Up to 8 sequential images, automatically saved to Gallery",CYAN,()->open(LocalImageActivity.class));
         tile(mode,"◇","Reference Image AI","Use real input photo to guide new on-device AI images",CYAN,()->open(ReferenceStudioActivity.class));
         tile(mode,"✦","AI Story → MP4 (Local)","Real AI keyframes + camera animation, no cloud",ACCENT,()->open(LocalAutoFilmActivity.class));
         tile(mode,"▶","Local Cinematic Movie Composer","Turn up to 16 AI pictures into crossfaded MP4",ACCENT,()->open(StoryMovieComposerActivity.class));
