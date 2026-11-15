@@ -20,7 +20,7 @@ def main() -> None:
     gradle_path = ANDROID / 'app/build.gradle.kts'
     workflow_path = ROOT.parent / '.github/workflows/realframe-v22-build.yml'
     for path in [manifest_path, gradle_path, workflow_path]:
-        require(path.exists(), f'Missing {path.relative_to(ROOT)}')
+        require(path.exists(), f'Missing {path}')
     if issues:
         raise SystemExit('\n'.join('ERROR: ' + i for i in issues))
 
