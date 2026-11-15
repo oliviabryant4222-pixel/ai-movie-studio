@@ -83,7 +83,7 @@ public final class ProductionPlannerActivity extends Activity {
         button.setBackground(shape(0xFF443D73));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(46));
         lp.topMargin=dp(8);parent.addView(button,lp);
-        button.setOnClickListener(v->{try{fn.run();}catch(Exception e){toast("Failed: "+e.getMessage());}});
+        StudioUi.styleButton(this,button,0xFF4A417D,title,fn);
         return button;
     }
     private void toast(String text){Toast.makeText(this,text,Toast.LENGTH_LONG).show();}
@@ -108,7 +108,7 @@ public final class ProductionPlannerActivity extends Activity {
         main.setBackgroundColor(BG);main.setPadding(dp(16),dp(15),dp(16),dp(12));
         setContentView(main);
         TextView title=label("←  Long-Video Production",23,TEXT,true);
-        title.setOnClickListener(v->finish());put(main,title);gap(main,7);
+        StudioUi.bind(this,title,"Back to studio",this::finish);put(main,title);gap(main,7);
         put(main,label("Consistency recipe  •  short clips  •  exportable scene plan",12,DIM,false));
         gap(main,14);
         ScrollView scroll=new ScrollView(this);main.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
