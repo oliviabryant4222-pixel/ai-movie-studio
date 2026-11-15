@@ -28,6 +28,6 @@ class ProductionPlannerSmokeTests(unittest.TestCase):
     def test_package(self):
         s=(ROOT/"android/app/build.gradle.kts").read_text()
         self.assertTrue('applicationId = "studio.realframe.v15"' in s or 'applicationId = "studio.realframe.v16"' in s or 'applicationId = "studio.realframe.v17"' in s or 'applicationId = "studio.realframe.v18"' in s or 'applicationId = "studio.realframe.v19"' in s or 'applicationId = "studio.realframe.v20"' in s or 'applicationId = "studio.realframe.v25"' in s)
-        self.assertTrue('versionName = "1.5.0-beta"' in s or 'versionName = "1.6.0-local-image-experimental"' in s or 'versionName = "1.7.0-hybrid-batch-beta"' in s or 'versionName = "1.8.0-local-video-experimental"' in s or 'versionName = "1.9.0-local-online-hybrid-beta"' in s or 'versionName = "2.0.0-one-tap-local-ai-beta"' in s or 'versionName = "2.5.0-premium-ui-beta"' in s)
+        self.assertTrue('versionName = "1.5.0-beta"' in s or 'versionName = "1.6.0-local-image-experimental"' in s or 'versionName = "1.7.0-hybrid-batch-beta"' in s or 'versionName = "1.8.0-local-video-experimental"' in s or 'versionName = "1.9.0-local-online-hybrid-beta"' in s or 'versionName = "2.0.0-one-tap-local-ai-beta"' in s or 'versionName = "2.6.0-local-engine-repair"' in s)
 
 if __name__ == '__main__':unittest.main()
