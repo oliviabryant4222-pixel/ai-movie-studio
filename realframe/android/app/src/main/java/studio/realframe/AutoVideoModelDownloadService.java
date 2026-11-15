@@ -149,12 +149,16 @@ public final class AutoVideoModelDownloadService extends Service {
                 ((required+350_000_000L-available)/1_000_000L+250L)+
                 " MB storage, then resume this automatic video model install");
     }
-    private static String sha256(File file)throws Exception {
+    private String sha256(File file)throws Exception {
         MessageDigest digest=MessageDigest.getInstance("SHA-256");
         try(InputStream in=new FileInputStream(file)) {
             byte[] buffer=new byte[1024*1024];
             int count;
-            while((count=in.read(buffer))!=-1) digest.update(buffer,0,count);
+            while((count=in.read(buffer))!=-1) {
+                if(cancel.get()||Thread.currentThread().isInterrupted())
+                    throw new InterruptedException("Model hash verification paused");
+                digest.update(buffer,0,count);
+            }
         }
         StringBuilder hex=new StringBuilder();
         for(byte b:digest.digest())hex.append(String.format(Locale.ROOT,"%02x",b&255));
@@ -167,6 +171,21 @@ public final class AutoVideoModelDownloadService extends Service {
             show("verifying","Verifying existing "+m.role+" model...");
             if(to.length()>=m.minSize&&m.sha.equalsIgnoreCase(sha256(to)))return;
             if(!to.delete())throw new IllegalStateException("Cannot discard corrupted "+m.role+" model");
+        }
+        // A previous run may have downloaded all bytes but stopped before
+        // activation. Verify a complete partial file without another network transfer.
+        if(partial.isFile()&&partial.length()>=m.minSize) {
+            show("verifying","Checking previously downloaded "+m.role+" component...");
+            if(m.sha.equalsIgnoreCase(sha256(partial))) {
+                if(!partial.renameTo(to))
+                    throw new IllegalStateException("Cannot activate saved "+m.role+" model");
+                ModelFileInspector.Result preflight=ModelFileInspector.inspect(to);
+                if(!preflight.plausible){
+                    to.delete();
+                    throw new IllegalStateException(m.role+" model header invalid: "+preflight.detail);
+                }
+                return;
+            }
         }
         long existing=partial.isFile()?partial.length():0;
         long likely=m.minSize+(m.minSize/8L);
@@ -256,6 +275,8 @@ public final class AutoVideoModelDownloadService extends Service {
         // Atomic activation: mixed half-installed sets do not become configured.
         android.content.SharedPreferences.Editor editor=getSharedPreferences(PREFS,MODE_PRIVATE).edit();
         for(Model m:MODELS)editor.putString(m.role+"Path",target(m).getAbsolutePath());
+        if(cancel.get()||Thread.currentThread().isInterrupted())
+            throw new InterruptedException("Model activation paused");
         if(!editor.commit())throw new IllegalStateException("Cannot activate downloaded model paths");
         state="installed";
         message="Wan 1.3B Q4, UMT5 Q4 and VAE installed. CPU video rendering STILL needs real device test.";
