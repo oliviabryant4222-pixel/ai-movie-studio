@@ -107,11 +107,13 @@ public final class WebStudioActivity extends Activity {
         LinearLayout secondRow = new LinearLayout(this);
         action("Other Image", secondRow, v -> openSpace(ALT_IMAGE_SPACE));
         action("Image→Video", secondRow, v -> openSpace(IMAGE_TO_VIDEO_SPACE));
-        action("Open browser", secondRow, v -> {
+        root.addView(secondRow);
+        LinearLayout thirdRow=new LinearLayout(this);
+        action("Open browser", thirdRow, v -> {
             startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(currentSpace)));
         });
-        action("Back to studio", secondRow, v -> finish());
-        root.addView(secondRow);
+        action("Back to studio", thirdRow, v -> finish());
+        root.addView(thirdRow);
         LinearLayout tools = new LinearLayout(this);
         action("↻ Retry",tools,v->{
             if(web!=null){
