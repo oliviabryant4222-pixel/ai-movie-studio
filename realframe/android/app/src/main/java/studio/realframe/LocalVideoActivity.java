@@ -10,6 +10,7 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.os.Handler;
 import android.os.Looper;
 import android.net.ConnectivityManager;
@@ -330,6 +331,23 @@ public final class LocalVideoActivity extends Activity {
             busy.set(false);runOnUiThread(this::refresh);
         }
     }
+    /** Verified Internet access, not simply "Wi-Fi connected" or radio enabled. */
+    private boolean internetAvailable(){
+        try{
+            ConnectivityManager cm=(ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
+            NetworkCapabilities caps=cm.getNetworkCapabilities(cm.getActiveNetwork());
+            return caps!=null&&caps.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+        }catch(Exception ignored){return false;}
+    }
+    private void recordVideoEvidence(String state,String detail,int frames,long duration){
+        // A claim of success requires actual native frames AND a reopened valid MP4.
+        getSharedPreferences("realframe_video_proof",MODE_PRIVATE).edit()
+            .putString("last_status",state)
+            .putString("last_detail",detail.length()>340?detail.substring(0,340):detail)
+            .putLong("last_duration_sec",duration)
+            .putInt("last_frames",frames)
+            .putLong("last_test_ms",System.currentTimeMillis()).apply();
+    }
     private void generate(){
         if(!allImported()){toast("Import all 3 compatible video model components first");return;}
         if(!LocalVideoEngine.isAvailable()){toast("Native CPU video engine unavailable");return;}
@@ -349,10 +367,13 @@ public final class LocalVideoActivity extends Activity {
         refresh();
         note("Native video model loading. May use multiple GB RAM and take a long time...");
         final String diffusion=path("diffusion"),t5=path("t5"),vae=path("vae");
+        final boolean internetAtStart=internetAvailable();
         worker.execute(()->{
+            final long startedAt=SystemClock.elapsedRealtime();
             final LocalVideoEncoder[] writer={null};
+            int resultCount=0;
             try {
-                int resultCount=LocalVideoEngine.generate(diffusion,t5,vae,phrase,bad,
+                resultCount=LocalVideoEngine.generate(diffusion,t5,vae,phrase,bad,
                     w,w,n,step,seedNum,4,
                     (index,width,height,fps,pixels)->{
                         try{
@@ -367,10 +388,30 @@ public final class LocalVideoActivity extends Activity {
                 if(resultCount<1||writer[0]==null)
                     throw new IllegalStateException("No AI video frames were generated");
                 Uri movie=writer[0].finish();
-                note("Saved "+resultCount+" AI-generated frames as MP4 in Movies/RealFrameStudio. "+
-                    "Open your Gallery to play the file: "+movie.getLastPathSegment());
+                final VideoOutputVerifier.Result inspection=VideoOutputVerifier.verify(this,movie,
+                    Math.min(resultCount,5));
+                if(!inspection.valid){
+                    // A corrupt or unreadable file must NOT be labelled a local success.
+                    getContentResolver().delete(movie,null,null);
+                    throw new IllegalStateException("Encoded MP4 failed validation: "+inspection.detail);
+                }
+                long elapsed=(SystemClock.elapsedRealtime()-startedAt)/1000;
+                boolean connectedAtEnd=internetAvailable();
+                String privacy=internetAtStart==connectedAtEnd ?
+                    (connectedAtEnd?"Local while Internet ON":"Local while Internet OFF"):
+                    "Network changed during native inference";
+                String outcome=resultCount==n?"SUCCESS":"PARTIAL";
+                String details=inspection.detail+"; "+resultCount+"/"+n+
+                    " actual native Wan frames; "+privacy+"; "+elapsed+"s";
+                recordVideoEvidence(outcome,details,resultCount,elapsed);
+                note((resultCount==n?"✓ VERIFIED LOCAL WAN VIDEO: ":"PARTIAL WAN VIDEO: ")+
+                    details+". Saved in Gallery → Movies/RealFrameStudio.");
             }catch(Throwable ex){
-                note("Local AI video failed: "+ex.getMessage());
+                long elapsed=(SystemClock.elapsedRealtime()-startedAt)/1000;
+                String detail=ex.getMessage()==null?ex.getClass().getSimpleName():ex.getMessage();
+                recordVideoEvidence("FAILED",detail,resultCount,elapsed);
+                note("LOCAL VIDEO NOT VERIFIED: "+detail+
+                    ". No model success claim. Check RAM and model compatibility.");
             }finally{
                 if(writer[0]!=null)writer[0].close();
                 busy.set(false);
