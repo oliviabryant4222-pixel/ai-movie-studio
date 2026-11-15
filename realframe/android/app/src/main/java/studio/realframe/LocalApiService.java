@@ -340,7 +340,7 @@ public final class LocalApiService extends Service {
             status.put("image_model",imageModel().isFile());
             status.put("video_models",videoModelsPresent());
             status.put("busy",activeJob.get());
-            status.put("max_image_batch",4);
+            status.put("max_image_batch",8);
             status.put("device_tested",false);
             reply(output,200,status);return;
         }
@@ -415,7 +415,7 @@ public final class LocalApiService extends Service {
                width%64!=0||height%64!=0)
                 throw new IllegalArgumentException("Bad resolution, steps or seed");
             if("image".equals(kind)){
-                if(count<1||count>4)throw new IllegalArgumentException("Image batch must be 1-4");
+                if(count<1||count>8)throw new IllegalArgumentException("Image batch must be 1-8");
                 if(!LocalImageEngine.isAvailable()||!imageModel().isFile())
                     throw new IllegalArgumentException("Local image engine/model not ready");
             }else{
