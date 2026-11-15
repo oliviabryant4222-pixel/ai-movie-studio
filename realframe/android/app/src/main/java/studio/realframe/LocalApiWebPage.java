@@ -50,7 +50,7 @@ You must import compatible licensed model files in the Android app first.</p>
 <div class="row">
 <div><label>Steps</label><select id="steps"><option value="4">4</option><option value="8">8</option><option value="12">12</option></select></div>
 <div><label>Seed</label><input id="seed" inputmode="numeric" value="13901"></div>
-<div><label>Image count / Video frames</label><select id="count"><option value="1">1 image / 5 video frames</option><option value="2">2 images / 9 video frames</option><option value="3">3 images / 17 video frames</option><option value="4">4 images / 33 video frames</option></select></div>
+<div><label>Image batch / Video frames</label><select id="count"></select></div>
 </div>
 <button onclick="create()">▶ Generate locally</button>
 <button class="danger" onclick="cancel()">Cancel active render</button>
@@ -67,6 +67,20 @@ When sharing over Wi-Fi, HTTP is not encrypted. Use only trusted private network
 <script>
 const byId=id=>document.getElementById(id);
 const token=()=>byId('token').value.trim();
+function refreshCount(){
+  const video=byId('kind').value==='video';
+  const options=video?[5,9,17,33]:[1,2,3,4,5,6,7,8];
+  const control=byId('count');
+  control.replaceChildren();
+  options.forEach(value=>{
+    const option=document.createElement('option');
+    option.value=String(value);
+    option.textContent=video?value+' video frames':value+' images (sequential)';
+    control.append(option);
+  });
+}
+byId('kind').addEventListener('change',refreshCount);
+refreshCount();
 let activeId='',poller=null;
 async function api(path,method='GET',data=null){
   if(!token())throw Error('Paste the device API token first.');
@@ -125,7 +139,7 @@ async function create(){
       width:sizes,height:sizes,steps:Number(byId('steps').value),
       seed:Number(byId('seed').value)
     };
-    body[video?'frames':'n']=video?[5,9,17,33][index-1]:index;
+    body[video?'frames':'n']=index;
     byId('result').textContent='Submitting native '+(video?'video':'image')+' job...';
     const job=await api(video?'/v1/videos/generations':'/v1/images/generations','POST',body);
     activeId=job.id;renderJob(job);poll();poller=setInterval(poll,2500);
