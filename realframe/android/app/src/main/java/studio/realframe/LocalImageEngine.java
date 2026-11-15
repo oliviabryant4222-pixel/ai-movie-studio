@@ -46,6 +46,12 @@ public final class LocalImageEngine {
     public static boolean isBusy() { return loaded && nativeBusy(); }
     public static void cancel() { if (loaded) nativeCancel(); }
     private static native boolean nativeBusy();
+    private static native String nativeLastIssue();
+    public static String lastNativeIssue(){
+        if(!loaded)return "Native image library could not load: "+loadError;
+        try{return nativeLastIssue();}
+        catch(Throwable error){return "Native logs unavailable: "+error.getMessage();}
+    }
 
     /** Called synchronously on the rendering worker after each completed image.
      * The consumer should save the image promptly; JNI releases its native pixels
