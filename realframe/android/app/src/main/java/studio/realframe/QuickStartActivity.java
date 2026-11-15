@@ -179,9 +179,18 @@ public final class QuickStartActivity extends Activity {
                 LocalImageEngine.unavailableReason());
         }else{
             long size=AutoModelDownloadService.partialBytes(this);
-            progress.setText("Status: "+AutoModelDownloadService.state+"\n"+
-                AutoModelDownloadService.message+"\n"+
-                (size>0?"Saved setup progress: "+(size/1_000_000L)+" MB":"No model data installed yet."));
+            String installerState=AutoModelDownloadService.state;
+            String installerMessage=AutoModelDownloadService.message;
+            if(!running && "not_installed".equals(installerState)){
+                android.content.SharedPreferences saved=
+                    getSharedPreferences("realframe_image_installer",MODE_PRIVATE);
+                installerState=saved.getString("last_state",installerState);
+                installerMessage=saved.getString("last_message",installerMessage);
+            }
+            progress.setText("Status: "+installerState+"\n"+
+                installerMessage+"\n"+
+                (size>0?"Saved setup progress: "+(size/1_000_000L)+" MB":"No model data installed yet.")+
+                "\nTap Install to retry an interrupted or failed transfer.");
         }
         install.setEnabled(!running);
         openLocal.setEnabled(true);
