@@ -1,5 +1,5 @@
 """RealFrame v1.4: hybrid routing & safe local model source registry.
-Tests validate wiring; actual Android model inference is intentionally not bundled.
+Tests validate wiring; physical Samsung inference is not validated by CI.
 """
 from pathlib import Path
 import unittest
@@ -26,7 +26,9 @@ class HybridRoutingTests(unittest.TestCase):
 
     def test_explicit_false_ready(self):
         s=(JAVA/"ModelManagerActivity.java").read_text()
-        self.assertIn("cpu text-to-image runtime installed",s.lower())
+        self.assertIn("CPU image engine:",s)
+        self.assertIn("AutoModelDownloadService.installed(this)",s)
+        self.assertIn("LocalImageEngine.isAvailable()",s)
         self.assertIn('putString("mode",value)',s)
 
     def test_manifest(self):
