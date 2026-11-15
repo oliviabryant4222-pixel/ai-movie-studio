@@ -15,6 +15,8 @@ import android.webkit.URLUtil;
 import android.webkit.ValueCallback;
 import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceResponse;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.view.View;
@@ -35,6 +37,7 @@ public final class WebStudioActivity extends Activity {
     private static final String ALT_IMAGE_SPACE = "https://huggingface.co/spaces/Tongyi-MAI/Z-Image-Turbo";
     private WebView web;
     private EditText prompt;
+    private TextView providerStatus;
     private ValueCallback<Uri[]> pendingFiles;
     private String currentSpace = IMAGE_SPACE;
 
@@ -108,6 +111,22 @@ public final class WebStudioActivity extends Activity {
         });
         action("Back to studio", secondRow, v -> finish());
         root.addView(secondRow);
+        LinearLayout tools = new LinearLayout(this);
+        action("↻ Retry",tools,v->{
+            if(web!=null){
+                providerStatus.setText("Retrying selected hosted provider...");
+                web.reload();
+            }
+        });
+        action("☁ Alternate image",tools,v->openSpace(ALT_IMAGE_SPACE));
+        action("◉ Local AI",tools,v->StudioUi.open(this,LocalImageActivity.class));
+        root.addView(tools);
+        providerStatus = new TextView(this);
+        providerStatus.setText("Online provider not loaded yet.");
+        providerStatus.setTextSize(12);
+        providerStatus.setTextColor(0xFF86D9CC);
+        providerStatus.setPadding(dp(9),dp(3),dp(9),dp(7));
+        root.addView(providerStatus);
         web = new WebView(this);
         web.setBackgroundColor(0xFF101B2E);
         web.getSettings().setJavaScriptEnabled(true);
@@ -120,6 +139,24 @@ public final class WebStudioActivity extends Activity {
         CookieManager.getInstance().setAcceptCookie(true);
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
         web.setWebViewClient(new WebViewClient() {
+            @Override public void onPageStarted(WebView view,String url,android.graphics.Bitmap favicon){
+                if(providerStatus!=null)
+                    providerStatus.setText("Connecting to hosted AI · network and provider quota required...");
+            }
+            @Override public void onPageFinished(WebView view,String url){
+                if(providerStatus!=null)
+                    providerStatus.setText("Provider page loaded. Generating requires its own queue/login/quota.");
+            }
+            @Override public void onReceivedError(WebView view,WebResourceRequest request,WebResourceError error){
+                if(request.isForMainFrame()&&providerStatus!=null)
+                    providerStatus.setText("Provider failed to load: "+error.getDescription()+
+                        ". Tap Retry, Alternate image, or Local AI.");
+            }
+            @Override public void onReceivedHttpError(WebView view,WebResourceRequest request,WebResourceResponse response){
+                if(request.isForMainFrame()&&providerStatus!=null)
+                    providerStatus.setText("Hosted provider HTTP "+response.getStatusCode()+
+                        ". You can retry, switch provider, or use on-phone Local AI.");
+            }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
                 if ("https".equals(uri.getScheme()) && isTrustedHost(uri.getHost())) return false;
@@ -178,7 +215,10 @@ public final class WebStudioActivity extends Activity {
                 || host.equals("hf.space") || host.endsWith(".hf.space"));
     }
     private void openSpace(String url) {
+        if(url==null||!url.startsWith("https://huggingface.co/spaces/"))
+            throw new IllegalArgumentException("Not a verified hosted AI Space link");
         currentSpace = url;
+        if (providerStatus != null) providerStatus.setText("Opening hosted provider...");
         if (web != null) web.loadUrl(url);
     }
     @Override protected void onActivityResult(int requestCode, int resultCode, Intent data) {
