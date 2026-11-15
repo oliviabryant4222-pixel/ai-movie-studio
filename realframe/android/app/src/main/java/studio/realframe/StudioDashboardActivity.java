@@ -95,8 +95,8 @@ public final class StudioDashboardActivity extends Activity {
     }
     private void engineInfo(){
         new AlertDialog.Builder(this)
-            .setTitle("Offline image engine — experimental")
-            .setMessage("This build includes native CPU stable-diffusion.cpp for local image generation AND an experimental Wan T2V video bridge. The app does not include model weights. Wan requires several components and may not fit in your phone RAM. Qualcomm QNN/NPU acceleration is not integrated.")
+            .setTitle("RealFrame local AI engine")
+            .setMessage("This app includes native CPU stable-diffusion.cpp for local image generation plus an experimental Wan T2V video bridge. One-tap setup can install licensed image and video weights inside the app. Exact identity lock, native video speed and Qualcomm QNN/NPU acceleration are not guaranteed. Check Device Health for on-phone diagnostics.")
             .setPositiveButton("Got it",null).show();
     }
     @Override public void onCreate(Bundle b){
@@ -118,7 +118,7 @@ public final class StudioDashboardActivity extends Activity {
         put(name,label("REALFRAME",21,WHITE,true));
         put(name,label("AI  /  MOVIE STUDIO",11,MUTED,true));
         top.addView(name,new LinearLayout.LayoutParams(0,-2,1));
-        TextView badge=label("BETA 2.2",11,CYAN,true);
+        TextView badge=label("RC 2.3",11,CYAN,true);
         badge.setGravity(Gravity.CENTER);badge.setBackground(shape(0xFF172C37,12));
         top.addView(badge,new LinearLayout.LayoutParams(dp(88),dp(35)));
         shell.addView(top);
