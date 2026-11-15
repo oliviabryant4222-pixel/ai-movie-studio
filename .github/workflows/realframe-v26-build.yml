@@ -1,0 +1,133 @@
+name: Build RealFrame AI Studio v2.6 Local Engine Repair
+on:
+  workflow_dispatch:
+  push:
+    branches: [realframe-studio-v26-repair]
+    paths:
+      - 'realframe/**'
+      - '.github/workflows/realframe-v26-build.yml'
+
+permissions:
+  contents: read
+
+# Only the latest commit on this beta branch needs an expensive native APK build.
+concurrency:
+  group: realframe-v26-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Python/FFmpeg utility tests
+        working-directory: realframe
+        run: |
+          if ! command -v ffmpeg >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y ffmpeg
+          fi
+          python3 -m unittest discover -s tests -v
+      - name: Install JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Compile + run native Java media header tests
+        working-directory: realframe
+        run: |
+          mkdir -p /tmp/realframe-header-tests
+          javac -d /tmp/realframe-header-tests android/app/src/main/java/studio/realframe/MediaSignature.java tests/TestMediaSignature.java
+          java -cp /tmp/realframe-header-tests TestMediaSignature
+      - name: Verify Hybrid routing privacy contract (pure Java)
+        working-directory: realframe
+        run: |
+          mkdir -p /tmp/realframe-hybrid-policy-tests
+          javac -d /tmp/realframe-hybrid-policy-tests android/app/src/main/java/studio/realframe/HybridRoutePolicy.java tests/TestHybridRoutePolicy.java
+          java -cp /tmp/realframe-hybrid-policy-tests TestHybridRoutePolicy
+      - name: Confirm local model probe never labels failed renders as verified
+        working-directory: realframe
+        run: |
+          mkdir -p /tmp/realframe-probe-tests
+          javac -d /tmp/realframe-probe-tests android/app/src/main/java/studio/realframe/LocalInferenceProbe.java tests/TestLocalInferenceProbe.java
+          java -cp /tmp/realframe-probe-tests TestLocalInferenceProbe
+      - name: Local API authentication and request guard tests (pure Java)
+        working-directory: realframe
+        run: |
+          mkdir -p /tmp/realframe-local-api-tests
+          javac -d /tmp/realframe-local-api-tests android/app/src/main/java/studio/realframe/LocalApiSecurity.java tests/TestLocalApiSecurity.java
+          java -cp /tmp/realframe-local-api-tests TestLocalApiSecurity
+      - name: Checkpoint container validation tests (pure Java)
+        working-directory: realframe
+        run: |
+          mkdir -p /tmp/realframe-model-inspector-tests
+          javac -d /tmp/realframe-model-inspector-tests android/app/src/main/java/studio/realframe/ModelFileInspector.java tests/TestModelFileInspector.java
+          java -cp /tmp/realframe-model-inspector-tests TestModelFileInspector
+      - name: Managed model storage guard (pure Java)
+        working-directory: realframe
+        run: |
+          mkdir -p /tmp/realframe-model-storage-tests
+          javac -d /tmp/realframe-model-storage-tests android/app/src/main/java/studio/realframe/ModelStoragePolicy.java tests/TestModelStoragePolicy.java
+          java -cp /tmp/realframe-model-storage-tests TestModelStoragePolicy
+      - name: Install Gradle 8.9
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.9'
+      - name: Use runner's preinstalled Android SDK and ensure API 35
+        run: |
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          test -x "$SDKMANAGER"
+          yes | "$SDKMANAGER" --licenses >/dev/null || true
+          "$SDKMANAGER" "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
+      - name: Fetch pinned MIT-licensed native diffusion engine
+        run: |
+          bash realframe/tools/fetch_native_engine.sh
+      - name: Source/configuration preflight
+        working-directory: realframe
+        run: python3 tools/preflight.py
+      - name: Verify packaging smoke-tests for real video MP4 validator
+        working-directory: realframe
+        run: |
+          python3 -m unittest discover -s tests -p 'test_v24_video_proof.py' -v
+      - name: Validate every main UI route and tap handler
+        working-directory: realframe
+        run: |
+          python3 -m unittest discover -s tests -p 'test_v25_navigation_and_ui.py' -v
+      - name: Verify actionable on-phone local model repair and stable app ID
+        working-directory: realframe
+        run: |
+          python3 -m unittest discover -s tests -p 'test_v26_native_repair.py' -v
+      - name: Assemble debug APK
+        working-directory: realframe/android
+        run: gradle --no-daemon --stacktrace assembleDebug -Dorg.gradle.workers.max=2
+      - name: Check APK package signature and metadata
+        run: |
+          test -s realframe/android/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose realframe/android/app/build/outputs/apk/debug/app-debug.apk
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging realframe/android/app/build/outputs/apk/debug/app-debug.apk | head -n 15
+      - name: Verify native ARM64 payload and checksum APK
+        run: |
+          unzip -l realframe/android/app/build/outputs/apk/debug/app-debug.apk | grep -F 'lib/arm64-v8a/librealframe_sd.so'
+          mkdir -p realframe/dist
+          cp realframe/android/app/build/outputs/apk/debug/app-debug.apk realframe/dist/RealFrameStudio-v2.6-repair-debug.apk
+          cd realframe/dist
+          sha256sum RealFrameStudio-v2.6-repair-debug.apk > RealFrameStudio-v2.6-repair-debug.apk.sha256
+      - name: Prepare Android SDK apksigner for private stable-key signing
+        run: |
+          mkdir -p realframe/dist-signing-tool
+          test -f "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar"
+          cp "$ANDROID_HOME/build-tools/35.0.0/lib/apksigner.jar" realframe/dist-signing-tool/apksigner.jar
+      - name: Provide temporary APK signing tooling for private offline signing
+        uses: actions/upload-artifact@v4
+        with:
+          name: RealFrame-v26-internal-android-apksigner
+          path: realframe/dist-signing-tool/apksigner.jar
+          if-no-files-found: error
+          retention-days: 1
+      - name: Upload signed debug APK and checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: RealFrameStudio-v2_6-local-engine-repair-apk
+          path: realframe/dist/*
+          if-no-files-found: error
