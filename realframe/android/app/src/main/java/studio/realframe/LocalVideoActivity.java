@@ -185,6 +185,16 @@ public final class LocalVideoActivity extends Activity {
         }
         gap(panel,10);
         generate=button(panel,"▶  GENERATE REAL LOCAL AI VIDEO",this::generate,0xFF4E579E);
+        button(panel,"✓ TEST NATIVE WAN (256px • 5 frames • 4 steps)",()->{
+            if(!allImported()||!LocalVideoEngine.isAvailable()){
+                toast("First install WAN Q4 models inside this app.");return;
+            }
+            resolution.setSelection(0);frameCount.setSelection(0);steps.setSelection(0);
+            prompt.setText("A colorful kite gently moving in a sunny park, natural cinematic motion");
+            negative.setText("text, watermark, glitch");
+            seed.setText("13901");
+            generate();
+        },0xFF267B72);
         button(panel,"⏹  Cancel inference",()->{
             cancelImport=true;
             LocalVideoEngine.cancel();
