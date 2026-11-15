@@ -82,11 +82,11 @@ class NavigationAndUiAudit(unittest.TestCase):
 
     def test_ui_status_and_latest_version(self):
         s=(SRC/"StudioDashboardActivity.java").read_text(encoding="utf-8")
-        self.assertIn('label("v2.5"',s)
+        self.assertIn('label("v2.6"',s)
         self.assertIn("StudioUi.bind(this,tab",s)
         self.assertIn("NEW IMAGE",s)
         gradle=(APP/"build.gradle.kts").read_text(encoding="utf-8")
         self.assertIn('applicationId = "studio.realframe.v25"',gradle)
-        self.assertIn('versionName = "2.5.0-premium-ui-beta"',gradle)
+        self.assertIn('versionName = "2.6.0-local-engine-repair"',gradle)
 
 if __name__=="__main__":unittest.main()
