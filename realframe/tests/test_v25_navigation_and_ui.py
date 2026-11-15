@@ -77,7 +77,7 @@ class NavigationAndUiAudit(unittest.TestCase):
         s=(SRC/"StudioDashboardActivity.java").read_text(encoding="utf-8")
         self.assertIn('label("v2.5"',s)
         self.assertIn("StudioUi.bind(this,tab",s)
-        self.assertIn("New",s)
+        self.assertIn("NEW IMAGE",s)
         gradle=(APP/"build.gradle.kts").read_text(encoding="utf-8")
         self.assertIn('applicationId = "studio.realframe.v25"',gradle)
         self.assertIn('versionName = "2.5.0-premium-ui-beta"',gradle)
