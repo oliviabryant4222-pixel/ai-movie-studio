@@ -412,10 +412,10 @@ public final class LocalVideoActivity extends Activity {
                 .setTitle("WAN might exceed available Samsung RAM")
                 .setMessage("Only "+(info.availMem/1_000_000_000L)+
                     " GB free RAM is currently available. Even the Q4 Wan 1.3B model plus UMT5 and the video decoder can use many gigabytes. A 12 GB PHONE is not the same as 12 GB free model RAM. The Android process may be killed before rendering a frame.")
-                .setPositiveButton("Try experimental WAN anyway",(d,w)->{
+                .setPositiveButton("Try experimental WAN anyway",(dialog,which)->{
                     lowRamAcknowledged=true;generate();
                 })
-                .setNeutralButton("Use LOCAL story movie",(d,w)->
+                .setNeutralButton("Use LOCAL story movie",(dialog,which)->
                     startActivity(new Intent(this,LocalAutoFilmActivity.class)))
                 .setNegativeButton("Cancel",null).show();
             return;
