@@ -61,7 +61,8 @@ public final class StudioHealthActivity extends Activity {
         Button b=new Button(this);b.setAllCaps(false);b.setText(title);b.setTextColor(WHITE);
         b.setTextSize(14);b.setBackground(shape(color));
         LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(-1,dp(49));
-        p.topMargin=dp(9);parent.addView(b,p);b.setOnClickListener(v->action.run());
+        p.topMargin=dp(9);parent.addView(b,p);
+        StudioUi.styleButton(this,b,color,title,action);
     }
     private String mb(long bytes){
         return String.format(Locale.US,"%.1f MB",bytes/1_000_000.0);
@@ -112,7 +113,7 @@ public final class StudioHealthActivity extends Activity {
         LinearLayout root=vertical();root.setBackgroundColor(BG);
         root.setPadding(dp(16),dp(13),dp(16),dp(8));setContentView(root);
         TextView header=label("←   REALFRAME DEVICE HEALTH",23,WHITE,true);
-        header.setOnClickListener(v->finish());put(root,header);gap(root,8);
+        StudioUi.bind(this,header,"Back to studio",this::finish);put(root,header);gap(root,8);
         put(root,label("Model storage • safe cleanup • local diagnostics",13,AQUA,false));
         gap(root,14);
         ScrollView sc=new ScrollView(this);
