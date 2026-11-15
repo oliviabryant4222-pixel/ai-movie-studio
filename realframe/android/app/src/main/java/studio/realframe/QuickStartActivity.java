@@ -91,6 +91,7 @@ public final class QuickStartActivity extends Activity {
             toast("Pause requested. Progress stays on phone for resume.");
         });
         openLocal=button(p,"✦ Generate LOCAL AI image",0xFF287B72,()->open(LocalImageActivity.class));
+        button(p,"✓ TEST LOCAL AI with Internet ON / OFF",0xFF2E6B77,()->open(LocalProofActivity.class));
         button(p,"◉ Run LOCAL AI via browser (Internet ON allowed)",0xFF3F4B82,
             ()->open(LocalApiActivity.class));
         LinearLayout note=panel(body);
