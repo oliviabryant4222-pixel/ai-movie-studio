@@ -60,9 +60,7 @@ public final class LocalApiActivity extends Activity {
         b.setBackground(rounded(bg));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(48));
         lp.topMargin=dp(9);area.addView(b,lp);
-        b.setOnClickListener(v->{
-            try{work.run();}catch(Exception e){toast(e.getMessage());}
-        });
+        StudioUi.styleButton(this,b,bg,name,work);
         return b;
     }
     private void toast(String message){Toast.makeText(this,message,Toast.LENGTH_LONG).show();}
@@ -156,7 +154,7 @@ public final class LocalApiActivity extends Activity {
         root.setPadding(dp(16),dp(13),dp(16),dp(7));
         root.setBackgroundColor(BG);setContentView(root);
         TextView header=text("←  LOCAL + ONLINE SERVER",22,WHITE,true);
-        header.setOnClickListener(v->finish());put(root,header);
+        StudioUi.bind(this,header,"Back to studio",this::finish);put(root,header);
         gap(root,7);
         put(root,text("Run native RealFrame AI on this phone. Optionally control it from a browser on trusted Wi-Fi.",12,TEAL,false));
         gap(root,14);
