@@ -103,7 +103,7 @@ public final class UnifiedCreateActivity extends Activity {
         for(int i=1;i<names.length;i++)names[i]=presets.get(i).optString("name","Character "+i);
         character=choose(p,"CHARACTER VAULT",names);
         gap(p,12);
-        put(p,label("For local images, import a compatible SD1.5 checkpoint first. Image batches are CPU-only and can take considerable time. Local AI video is now experimental: download/import Wan T2V diffusion, T5 and VAE files (multi-GB). Cloud remains available.",13,DIM,false));
+        put(p,label("For local images, import a compatible SD1.5 checkpoint first. Image batches are CPU-only and can take considerable time. Local AI video remains experimental. The Video Lab offers an automatic 3-model Wan Q4 setup (~4.73 GB) with license consent, or manual advanced import. Cloud remains available.",13,DIM,false));
         button(p,"✦  CREATE",0xFF6051BB,this::create);
         button(p,"◇  REFERENCE IMAGE AI (LOCAL)",0xFF356F77,()->{
             try{
@@ -168,7 +168,7 @@ public final class UnifiedCreateActivity extends Activity {
             case UNSUPPORTED_LOCAL_VIDEO:
                 new AlertDialog.Builder(this)
                     .setTitle("Local Wan video model not configured")
-                    .setMessage("An experimental on-device CPU Wan T2V engine is included. Import diffusion model, T5 and VAE components before attempting real local AI video. Large video models may exhaust phone RAM. Nothing is uploaded.")
+                    .setMessage("An experimental on-device Wan T2V engine is included. Open Video Lab for optional one-tap automatic Q4 model setup (~4.73 GB, license consent) or manual advanced import. Large models can exhaust RAM. Nothing is uploaded.")
                     .setPositiveButton("Open Local Video Lab",(d,w)->localVideo(completed))
                     .setNegativeButton("Cancel",null).show();
                 break;
@@ -176,7 +176,7 @@ public final class UnifiedCreateActivity extends Activity {
                 new AlertDialog.Builder(this)
                     .setTitle("Choose generation engine")
                     .setMessage(video ?
-                        "Local Wan CPU video inference is experimental, and a compatible multi-GB model pack may exceed available phone RAM. Open the Local Video Lab to try it, or explicitly consent to an online provider." :
+                        "Local Wan CPU video is experimental. The Local Video Lab offers in-app one-tap Q4 weight setup (~4.73 GB). Actual 12GB RAM performance is not verified. Or explicitly consent to an online provider." :
                         "A local checkpoint, native library, or enough free RAM is missing. You can open the local importer or explicitly choose a hosted model.")
                     .setPositiveButton("Use Online AI",(d,w)->confirmCloud(completed,video))
                     .setNeutralButton(video?"Try Local Video":"Use Local Image",(d,w)->{
