@@ -4,11 +4,11 @@ android {
     namespace = "studio.realframe"
     compileSdk = 35
     defaultConfig {
-        applicationId = "studio.realframe.v21"
+        applicationId = "studio.realframe.v22"
         minSdk = 29
         targetSdk = 35
-        versionCode = 21
-        versionName = "2.1.0-reference-movie-beta"
+        versionCode = 22
+        versionName = "2.2.0-auto-wan-beta"
         ndk { abiFilters.add("arm64-v8a") }
     }
     ndkVersion = "27.2.12479018"
