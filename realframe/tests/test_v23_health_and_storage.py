@@ -41,7 +41,7 @@ class HealthAndStorageTests(unittest.TestCase):
             self.assertIn(token,src)
     def test_release_version(self):
         gradle=(APP/"build.gradle.kts").read_text()
-        self.assertIn('applicationId = "studio.realframe.v24"',gradle)
-        self.assertIn('versionName = "2.4.0-samsung-build"',gradle)
+        self.assertIn('applicationId = "studio.realframe.v25"',gradle)
+        self.assertIn('versionName = "2.5.0-premium-ui-beta"',gradle)
 
 if __name__=="__main__":unittest.main()
