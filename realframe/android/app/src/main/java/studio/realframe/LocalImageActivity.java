@@ -153,7 +153,7 @@ public final class LocalImageActivity extends Activity {
         gap(form,12);
         button(form,"💾  Save preview image again",this::export,0xFF247F73);
         gap(form,9);
-        put(form,label("CPU-only beta: image generation can be very slow, use lots of RAM, or fail for incompatible models. No QNN/NPU or offline video renderer is included. Keep the app open while sampling. Hosted generation is available separately under Online.",12,MUTED,false));
+        put(form,label("CPU-only beta: image generation can be very slow, use lots of RAM, or fail for incompatible models. Qualcomm QNN/NPU acceleration is unavailable. Experimental Wan video generation is a separate local Video Lab with large model weights; it may run out of memory. Keep the app open while sampling. Hosted generation is available separately under Online.",12,MUTED,false));
         refresh();
     }
     private void chooseModel(){
