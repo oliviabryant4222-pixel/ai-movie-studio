@@ -175,9 +175,9 @@ public final class LocalVideoActivity extends Activity {
         prompt=entry(panel,"Prompt","Short cinematic clip of a fictional adult walking in a park, realistic movement and natural sunlight");
         negative=entry(panel,"Negative prompt","watermark, text, blurry, glitch, distorted face");
         seed=entry(panel,"Seed (1–2147483647)","13901");
-        resolution=select(panel,"Resolution (CPU experiment)",new String[]{"256×256","320×320","384×384"});
+        resolution=select(panel,"Resolution (CPU experiment)",new String[]{"192×192 (low RAM)","256×256","320×320","384×384"});
         frameCount=select(panel,"Video frames (16fps)",new String[]{"5 frames","9 frames","17 frames","33 frames"});
-        steps=select(panel,"Sampling steps",new String[]{"4","8","12"});
+        steps=select(panel,"Sampling steps",new String[]{"1","4","8","12"});
         if(getIntent()!=null) {
             String incoming=getIntent().getStringExtra("prompt");
             if(incoming!=null&&!incoming.isEmpty())prompt.setText(incoming);
@@ -192,12 +192,20 @@ public final class LocalVideoActivity extends Activity {
             if(!allImported()||!LocalVideoEngine.isAvailable()){
                 toast("First install WAN Q4 models inside this app.");return;
             }
-            resolution.setSelection(0);frameCount.setSelection(0);steps.setSelection(0);
+            resolution.setSelection(1);frameCount.setSelection(0);steps.setSelection(1);
             prompt.setText("A colorful kite gently moving in a sunny park, natural cinematic motion");
             negative.setText("text, watermark, glitch");
             seed.setText("13901");
             generate();
         },0xFF267B72);
+        button(panel,"⚡ LOW-RAM WAN DIAGNOSTIC (192px • 5 frames • 1 step)",()->{
+            if(!allImported()){confirmAutoInstall();return;}
+            resolution.setSelection(0);frameCount.setSelection(0);steps.setSelection(0);
+            prompt.setText("An orange kite over a field in daylight, gentle camera movement");
+            negative.setText("text, watermark, glitch");
+            seed.setText("13901");
+            generate();
+        },0xFF286B70);
         button(panel,"⏹  Cancel inference",()->{
             cancelImport=true;
             LocalVideoEngine.cancel();
@@ -389,7 +397,7 @@ public final class LocalVideoActivity extends Activity {
         try{seedNum=Long.parseLong(seed.getText().toString().trim());}
         catch(Exception e){busy.set(false);toast("Seed must be a number");return;}
         if(seedNum<1||seedNum>2147483647L){busy.set(false);toast("Seed out of range");return;}
-        int[] dimensions={256,320,384};
+        int[] dimensions={192,256,320,384};
         int[] frames={5,9,17,33};
         int w=dimensions[resolution.getSelectedItemPosition()];
         int n=frames[frameCount.getSelectedItemPosition()];
