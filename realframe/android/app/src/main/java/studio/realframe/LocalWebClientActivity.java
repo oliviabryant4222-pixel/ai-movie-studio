@@ -39,8 +39,8 @@ public final class LocalWebClientActivity extends Activity {
         back.setAllCaps(false);
         back.setTextColor(Color.WHITE);
         back.setBackgroundColor(0xFF1E3048);
-        back.setOnClickListener(v->finish());
-        root.addView(back,new LinearLayout.LayoutParams(-1,50*(int)getResources().getDisplayMetrics().density));
+        StudioUi.styleButton(this,back,0xFF263D5B,"Back from local browser",this::finish);
+        root.addView(back,new LinearLayout.LayoutParams(-1,StudioUi.dp(this,50)));
         view=new WebView(this);
         view.setBackgroundColor(0xFF0C1425);
         WebSettings settings=view.getSettings();
