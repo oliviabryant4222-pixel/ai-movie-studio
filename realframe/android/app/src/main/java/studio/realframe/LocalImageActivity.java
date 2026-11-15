@@ -2,6 +2,7 @@ package studio.realframe;
 
 import android.app.Activity;
 import android.app.ActivityManager;
+import android.app.AlertDialog;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.database.Cursor;
@@ -98,7 +99,9 @@ public final class LocalImageActivity extends Activity {
         if(engineStatus!=null)engineStatus.setText(LocalImageEngine.isAvailable()
             ? "Native CPU inference library: INSTALLED ✓"
             : "Native CPU inference library unavailable: "+LocalImageEngine.unavailableReason());
-        if(generate!=null)generate.setEnabled(!running.get() && LocalImageEngine.isAvailable() && model.isFile());
+        // Do not disable the action silently: show a clear one-tap setup route
+        // when model weights are absent or the native engine cannot load.
+        if(generate!=null)generate.setEnabled(!running.get());
         if(importModel!=null)importModel.setEnabled(!running.get());
     }
     @Override public void onCreate(Bundle savedInstanceState){
@@ -246,6 +249,29 @@ public final class LocalImageActivity extends Activity {
      * Outputs from a cancelled/failed batch remain in Gallery.
      */
     private void generateImage(){
+        if(!LocalImageEngine.isAvailable()){
+            new AlertDialog.Builder(this)
+                .setTitle("LOCAL image engine cannot load")
+                .setMessage("Android could not load the native image library: "+
+                    LocalImageEngine.unavailableReason()+
+                    "\nUse Device Health for detailed diagnostics.")
+                .setPositiveButton("Device Health",(d,w)->
+                    startActivity(new Intent(this,StudioHealthActivity.class)))
+                .setNegativeButton("Close",null).show();
+            return;
+        }
+        File checkpoint=new File(modelPath());
+        if(!checkpoint.isFile()||checkpoint.length()<16L*1024*1024){
+            new AlertDialog.Builder(this)
+                .setTitle("LOCAL image model not installed")
+                .setMessage("The 1.75 GB SD1.5 model must be downloaded ONCE inside this app before native images can render. This is a local model — Internet can remain ON or OFF after installation. No cloud fallback.")
+                .setPositiveButton("ONE-TAP MODEL SETUP",(d,w)->
+                    startActivity(new Intent(this,QuickStartActivity.class)))
+                .setNeutralButton("Use hosted Online AI",(d,w)->
+                    startActivity(new Intent(this,WebStudioActivity.class).putExtra("kind","image")))
+                .setNegativeButton("Cancel",null).show();
+            return;
+        }
         if(!running.compareAndSet(false,true))return;
         result=null;
         String model=modelPath(), text=prompt.getText().toString(), neg=negative.getText().toString();
@@ -283,10 +309,22 @@ public final class LocalImageActivity extends Activity {
                             throw new IllegalStateException("Image "+(index+1)+" could not save: "+error.getMessage(),error);
                         }
                     });
+                getSharedPreferences("realframe_image_jobs",MODE_PRIVATE).edit()
+                    .putString("last_status",finished>0?"SUCCESS":"NO_IMAGE")
+                    .putInt("last_images",saved[0])
+                    .putLong("last_time_ms",System.currentTimeMillis()).apply();
                 message("Local batch finished: "+finished+"/"+count+" images. "+saved[0]+
                         " saved to Gallery."+(finished<count?" Rendering cancelled.":""));
             }catch(Throwable e){
-                message("Local batch stopped after "+saved[0]+" image(s): "+e.getMessage());
+                String err=e.getMessage()==null?e.toString():e.getMessage();
+                String detail=err+"; native: "+LocalImageEngine.lastNativeIssue();
+                getSharedPreferences("realframe_image_jobs",MODE_PRIVATE).edit()
+                    .putString("last_status","FAILED")
+                    .putString("last_error",detail.length()>480?detail.substring(0,480):detail)
+                    .putInt("last_images",saved[0])
+                    .putLong("last_time_ms",System.currentTimeMillis()).apply();
+                message("LOCAL image FAILED after "+saved[0]+" saved image(s): "+detail+
+                    "\nOpen Device Health → Copy diagnostics. Models must be compatible and have enough free RAM.");
             }finally{
                 running.set(false);runOnUiThread(this::refresh);
             }
