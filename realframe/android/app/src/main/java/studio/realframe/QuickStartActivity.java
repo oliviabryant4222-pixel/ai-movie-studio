@@ -59,7 +59,7 @@ public final class QuickStartActivity extends Activity {
         button.setTextSize(15);button.setTextColor(WHITE);button.setBackground(shape(color));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(50));
         lp.topMargin=dp(9);p.addView(button,lp);
-        button.setOnClickListener(v->handler.run());
+        StudioUi.styleButton(this,button,color,caption,handler);
         return button;
     }
     private void toast(String s){Toast.makeText(this,s,Toast.LENGTH_LONG).show();}
@@ -71,7 +71,7 @@ public final class QuickStartActivity extends Activity {
         LinearLayout root=vertical();root.setBackgroundColor(BG);
         root.setPadding(dp(17),dp(13),dp(17),dp(7));setContentView(root);
         TextView heading=label("←   REALFRAME AI SETUP",23,WHITE,true);
-        heading.setOnClickListener(v->finish());put(root,heading);gap(root,6);
+        StudioUi.bind(this,heading,"Back to studio",this::finish);put(root,heading);gap(root,6);
         put(root,label("No manual model files • No separate AI app • No token",13,CYAN,false));gap(root,13);
         ScrollView scroll=new ScrollView(this);
         root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
