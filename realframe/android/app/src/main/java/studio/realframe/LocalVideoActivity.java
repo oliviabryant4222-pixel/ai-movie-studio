@@ -10,6 +10,10 @@ import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.net.ConnectivityManager;
+import android.net.NetworkCapabilities;
 import android.os.StatFs;
 import android.provider.OpenableColumns;
 import android.view.Gravity;
@@ -49,6 +53,16 @@ public final class LocalVideoActivity extends Activity {
     private Spinner resolution,frameCount,steps;
     private Button generate;
     private SharedPreferences prefs;
+    private final Handler uiHandler=new Handler(Looper.getMainLooper());
+    private TextView setupStatus;
+    private Button autoInstall;
+    private boolean screenVisible=false;
+    private final Runnable installerUpdate=new Runnable(){
+        @Override public void run(){
+            if(!screenVisible)return;
+            refresh();uiHandler.postDelayed(this,1600);
+        }
+    };
 
     private int dp(int n){return Math.round(n*getResources().getDisplayMetrics().density);}
     private GradientDrawable rounded(int col) {
@@ -113,6 +127,11 @@ public final class LocalVideoActivity extends Activity {
             ? "Native Wan CPU engine compiled ✓ (device inference unverified)"
             : "Native video engine missing: "+LocalVideoEngine.issue());
         if(generate!=null)generate.setEnabled(!busy.get() && allImported() && LocalVideoEngine.isAvailable());
+        if(setupStatus!=null)
+            setupStatus.setText("WAN auto setup: "+AutoVideoModelDownloadService.state+
+                "\n"+AutoVideoModelDownloadService.message+
+                "\nDownloaded on this phone: "+(AutoVideoModelDownloadService.partialBytes(this)/1_000_000L)+" MB");
+        if(autoInstall!=null)autoInstall.setEnabled(!AutoVideoModelDownloadService.isDownloading());
     }
 
     @Override public void onCreate(Bundle savedState){
@@ -134,6 +153,15 @@ public final class LocalVideoActivity extends Activity {
         gap(panel,10);
         engineInfo=label("",13,TEAL,true);put(panel,engineInfo);gap(panel,9);
         modelInfo=label("",13,WHITE,false);put(panel,modelInfo);
+        setupStatus=label("",13,TEAL,false);gap(panel,10);put(panel,setupStatus);
+        autoInstall=button(panel,"⬇ ONE-TAP INSTALL Wan Q4 PACK (~4.73 GB)",this::confirmAutoInstall,0xFF277669);
+        button(panel,"⏸ Pause automatic WAN download",()->{
+            Intent i=new Intent(this,AutoVideoModelDownloadService.class);
+            i.setAction(AutoVideoModelDownloadService.CANCEL);
+            startService(i);
+            toast("Pause requested. Resume later without starting from zero.");
+        },0xFF694B55);
+        put(panel,label("Automatic setup obtains 3 Apache-2.0 open-weight models in the app. No manual model downloads. Requires Internet once and about 5.5 GB free storage. An installed checkpoint does NOT prove Wan video will fit in RAM.",12,MUTED,false));
         button(panel,"1 • Import Wan T2V diffusion model",()->pick(PICK_DIFFUSION),0xFF4E4286);
         button(panel,"2 • Import UMT5 / T5 text encoder",()->pick(PICK_T5),0xFF4E4286);
         button(panel,"3 • Import Wan VAE",()->pick(PICK_VAE),0xFF4E4286);
@@ -166,6 +194,49 @@ public final class LocalVideoActivity extends Activity {
         put(panel,status);gap(panel,10);
         put(panel,label("This is NOT a prebuilt full movie model. Wan CPU T2V may be too slow or fail due to RAM. Cloud AI video remains available from Online. Local photo→MP4 and clip joining work without AI weights.",12,MUTED,false));
         refresh();
+    }
+    private boolean isWifi(){
+        try{
+            ConnectivityManager cm=(ConnectivityManager)getSystemService(CONNECTIVITY_SERVICE);
+            NetworkCapabilities caps=cm.getNetworkCapabilities(cm.getActiveNetwork());
+            return caps!=null&&caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI);
+        }catch(Exception ignored){return false;}
+    }
+    private void confirmAutoInstall(){
+        if(AutoVideoModelDownloadService.isDownloading()){
+            toast("WAN setup already running");return;
+        }
+        if(AutoVideoModelDownloadService.installed(this)){
+            toast("WAN model components are configured. Try a small render to test hardware.");return;
+        }
+        String details="RealFrame downloads Wan2.1 T2V 1.3B Q4 (816 MB), UMT5-XXL Q4 (3.66 GB), "+
+            "and Wan2.1 VAE (254 MB) from Hugging Face, approximately 4.73 GB in total. "+
+            "Models are Apache-2.0 licensed. Downloaded weights are verified by SHA-256. "+
+            "No external app, manually managed files or API tokens. "+
+            "After setup, local video inference uses your phone CPU with Internet ON or OFF. "+
+            "WARNING: this is an experimental engine. 12 GB RAM might be insufficient, "+
+            "and generation can be extremely slow. Not a guaranteed full local movie generator. "+
+            "Recommended: at least 5.5 GB available internal storage.";
+        new AlertDialog.Builder(this)
+            .setTitle("One-tap WAN Q4 local video models")
+            .setMessage(details)
+            .setPositiveButton("Accept licenses & install",(dialog,which)->{
+                if(!isWifi()){
+                    new AlertDialog.Builder(this).setTitle("Large mobile data usage")
+                        .setMessage("About 4.73 GB may download over mobile data. Continue?")
+                        .setPositiveButton("Use mobile data",(d,w)->launchAutoInstall())
+                        .setNegativeButton("Cancel",null).show();
+                }else launchAutoInstall();
+            }).setNegativeButton("Cancel",null).show();
+    }
+    private void launchAutoInstall(){
+        try{
+            Intent i=new Intent(this,AutoVideoModelDownloadService.class);
+            i.setAction(AutoVideoModelDownloadService.START);
+            startForegroundService(i);
+            toast("Automatic Wan Q4 install started inside RealFrame");
+            uiHandler.postDelayed(this::refresh,700);
+        }catch(Exception ex){toast("Video setup could not start: "+ex.getMessage());}
     }
     private void docs(){
         new AlertDialog.Builder(this).setTitle("Wan2.1 T2V 1.3B local model")
@@ -306,6 +377,13 @@ public final class LocalVideoActivity extends Activity {
                 runOnUiThread(this::refresh);
             }
         });
+    }
+    @Override protected void onResume(){
+        super.onResume();screenVisible=true;uiHandler.removeCallbacks(installerUpdate);
+        uiHandler.post(installerUpdate);refresh();
+    }
+    @Override protected void onPause(){
+        screenVisible=false;uiHandler.removeCallbacks(installerUpdate);super.onPause();
     }
     @Override protected void onDestroy(){
         if(busy.get()){cancelImport=true;LocalVideoEngine.cancel();}
