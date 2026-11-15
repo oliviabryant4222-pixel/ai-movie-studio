@@ -10,6 +10,8 @@
 #include "stable-diffusion.h"
 
 extern std::atomic<bool> g_realframe_model_busy;
+extern void rf_begin_native_diagnostics();
+extern std::string rf_latest_native_issue();
 namespace {
 std::mutex s_mutex;
 sd_ctx_t* s_active=nullptr;
@@ -93,6 +95,7 @@ Java_studio_realframe_LocalVideoEngine_nativeGenerate(
     env->DeleteLocalRef(sinkClass);
     if(!send)return 0;
 
+    rf_begin_native_diagnostics();
     sd_ctx_params_t context{};
     sd_ctx_params_init(&context);
     context.diffusion_model_path=diffusion.c_str();
@@ -100,10 +103,14 @@ Java_studio_realframe_LocalVideoEngine_nativeGenerate(
     context.vae_path=vae.c_str();
     context.n_threads=static_cast<int>(threadCount);
     context.enable_mmap=true;
+    // Reduce peak CPU RAM through attention/decoder optimizations supported by
+    // the pinned stable-diffusion.cpp API. Still not a 12GB guarantee.
+    context.flash_attn=true;
+    context.vae_conv_direct=true;
     // GGML CPU only. No unsupported Qualcomm QNN/NPU claim.
     sd_ctx_t* pointer=new_sd_ctx(&context);
     if(!pointer){
-        fail(env,"Could not load video model. Need compatible Wan T2V diffusion, T5 and VAE plus enough RAM.");
+        fail(env,"Could not load Wan video checkpoint on this phone. Upstream issue: "+rf_latest_native_issue());
         return 0;
     }
     Context holder(pointer);
@@ -126,13 +133,17 @@ Java_studio_realframe_LocalVideoEngine_nativeGenerate(
     params.sample_params.sample_method=EULER_SAMPLE_METHOD;
     params.sample_params.guidance.txt_cfg=6.0f;
     params.sample_params.flow_shift=3.0f;
+    params.vae_tiling_params.enabled=true;
+    params.vae_tiling_params.temporal_tiling=true;
+    params.vae_tiling_params.tile_size_w=128;
+    params.vae_tiling_params.tile_size_h=128;
 
     sd_video_generation_result_t* output=nullptr;
     bool generated=generate_video(pointer,&params,&output);
     if(!generated || !output || !output->frames || output->frame_count<1) {
         if(output)free_sd_video_generation_result(output);
         if(s_cancel.load())return 0;
-        fail(env,"Local diffusion video failed: model mismatch, unsupported layers, thermal limit or out-of-memory.");
+        fail(env,"Wan native diffusion video failed: "+rf_latest_native_issue());
         return 0;
     }
     const int fps=output->fps>0&&output->fps<=60?output->fps:16;
