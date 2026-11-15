@@ -78,7 +78,8 @@ public final class LocalAutoFilmActivity extends Activity {
         Button b=new Button(this);b.setText(name);b.setAllCaps(false);
         b.setTextSize(14);b.setTextColor(WHITE);b.setBackground(shape(color));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(49));
-        lp.topMargin=dp(9);p.addView(b,lp);b.setOnClickListener(v->callback.run());
+        lp.topMargin=dp(9);p.addView(b,lp);
+        StudioUi.styleButton(this,b,color,name,callback);
         return b;
     }
     private File model(){
@@ -99,7 +100,7 @@ public final class LocalAutoFilmActivity extends Activity {
         LinearLayout root=col();root.setBackgroundColor(BG);
         root.setPadding(dp(16),dp(14),dp(16),dp(8));setContentView(root);
         TextView title=label("←   AUTO AI STORY MOVIE",22,WHITE,true);
-        title.setOnClickListener(v->finish());put(root,title);gap(root,6);
+        StudioUi.bind(this,title,"Back to studio",this::finish);put(root,title);gap(root,6);
         put(root,label("Real local AI scene keyframes → animated H.264 MP4 • Internet not required",12,TEAL,false));
         gap(root,12);
         ScrollView scroll=new ScrollView(this);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
