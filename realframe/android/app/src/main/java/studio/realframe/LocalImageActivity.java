@@ -135,8 +135,8 @@ public final class LocalImageActivity extends Activity {
         }
         resolution=options(form,"Resolution (CPU preview)",new String[]{"256 × 256","384 × 384","512 × 512"});
         stepList=options(form,"Sampling steps",new String[]{"4","8","12","20"});
-        batchList=options(form,"Local batch (sequential, one model load)",new String[]{"1","2","3","4"});
-        put(form,label("Each finished image saves automatically to Pictures/RealFrameStudio. Batch runs sequentially to conserve RAM; it is not parallel GPU processing.",12,MUTED,false));
+        batchList=options(form,"Local batch (sequential, one model load)",new String[]{"1","2","3","4","5","6","7","8"});
+        put(form,label("Each image saves to Pictures/RealFrameStudio. You can queue up to 8 outputs in one local model session, run sequentially to conserve RAM, not true GPU parallel.",12,MUTED,false));
         gap(form,11);
         generate=button(form,"✦  GENERATE LOCAL IMAGE BATCH",this::generateImage,0xFF4A438E);
         button(form,"⏹  Cancel active local render",()->{importCancelled=true;LocalImageEngine.cancel();message("Cancellation requested; model loading may not stop immediately.");},0xFF4B3851);
