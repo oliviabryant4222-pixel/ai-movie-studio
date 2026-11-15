@@ -20,10 +20,10 @@ class NavigationAndUiAudit(unittest.TestCase):
         for java in SRC.glob("*.java"):
             text=java.read_text(encoding="utf-8")
             patterns=[
-                r"new\\s+Intent\\s*\\(\\s*this\\s*,\\s*(\\w+)\\.class\\s*\\)",
-                r"open\\s*\\(\\s*(\\w+Activity)\\.class\\s*\\)",
-                r"StudioUi\\.open\\s*\\(\\s*this\\s*,\\s*(\\w+)\\.class\\s*\\)",
-                r"new\\s+Intent\\s*\\(\\s*[A-Za-z_]+\\.this\\s*,\\s*(\\w+)\\.class\\s*\\)",
+                r"new\s+Intent\s*\(\s*this\s*,\s*(\w+)\.class\s*\)",
+                r"open\s*\(\s*(\w+Activity)\.class\s*\)",
+                r"StudioUi\.open\s*\(\s*this\s*,\s*(\w+)\.class\s*\)",
+                r"new\s+Intent\s*\(\s*[A-Za-z_]+\.this\s*,\s*(\w+)\.class\s*\)",
             ]
             for pattern in patterns:
                 routed.update(re.findall(pattern,text))
@@ -36,8 +36,8 @@ class NavigationAndUiAudit(unittest.TestCase):
     def test_advanced_dashboard_tabs_map_to_real_mainactivity_routes(self):
         home=(SRC/"StudioDashboardActivity.java").read_text(encoding="utf-8")
         advanced=(SRC/"MainActivity.java").read_text(encoding="utf-8")
-        destinations=set(re.findall(r'advanced\\("([^"]+)"\\)',home))
-        valid=set(re.findall(r'case\\s+"([^"]+)"\\s*:',advanced))
+        destinations=set(re.findall(r'advanced\("([^"]+)"\)',home))
+        valid=set(re.findall(r'case\s+"([^"]+)"\s*:',advanced))
         self.assertGreaterEqual(len(destinations),5)
         self.assertFalse(destinations-valid,
             f"Dashboard links to unsupported advanced pages: {sorted(destinations-valid)}")
