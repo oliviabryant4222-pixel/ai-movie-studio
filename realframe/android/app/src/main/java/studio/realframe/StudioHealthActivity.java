@@ -79,9 +79,12 @@ public final class StudioHealthActivity extends Activity {
         am.getMemoryInfo(memory);
         File base=getFilesDir();
         StatFs disk=new StatFs(base.getAbsolutePath());
-        String proof=getSharedPreferences("realframe_local_proof",MODE_PRIVATE)
-            .getString("last_result","not yet tested");
-        return "REALFRAME v2.3 Android diagnostics (no prompts/secrets)\n"+
+        SharedPreferences imageTests=getSharedPreferences("realframe_local_proof",MODE_PRIVATE);
+        SharedPreferences videoTests=getSharedPreferences("realframe_video_proof",MODE_PRIVATE);
+        String proof=imageTests.getString("last_result","not yet tested");
+        String wanState=videoTests.getString("last_status","not yet tested");
+        String wanDetails=videoTests.getString("last_detail","");
+        return "REALFRAME v2.4 Android diagnostics (no prompts/secrets)\n"+
             "Device: "+Build.MANUFACTURER+" "+Build.MODEL+"\n"+
             "Android SDK: "+Build.VERSION.SDK_INT+"\n"+
             "CPU ABIs: "+String.join(", ",Build.SUPPORTED_ABIS)+"\n"+
@@ -95,6 +98,10 @@ public final class StudioHealthActivity extends Activity {
             "Native model job active: "+LocalImageEngine.isBusy()+"\n"+
             "Phone local API: "+(LocalApiService.isRunning()?"active":"stopped")+"\n"+
             "Last local image proof: "+proof+"\n"+
+            "LOCAL image with Internet ON: "+(imageTests.getBoolean("local_while_online_verified",false)?"PHYSICAL RENDER VERIFIED":"not verified")+"\n"+
+            "LOCAL image Internet OFF: "+(imageTests.getBoolean("fully_offline_verified",false)?"PHYSICAL RENDER VERIFIED":"not verified")+"\n"+
+            "Native WAN video proof: "+wanState+"\n"+
+            "WAN video details: "+wanDetails+"\n"+
             "Auto image model storage: "+mb(ModelStoragePolicy.imageBytes(base))+"\n"+
             "Auto video model storage: "+mb(ModelStoragePolicy.videoBytes(base))+"\n"+
             "Note: app installation/CI alone does not prove successful Wan AI video rendering.";
@@ -123,6 +130,8 @@ public final class StudioHealthActivity extends Activity {
         });
         button(statusPanel,"✓ Test actual LOCAL inference",0xFF327F72,
             ()->startActivity(new Intent(this,LocalProofActivity.class)));
+        button(statusPanel,"▶ Test genuine WAN video + verify saved MP4",0xFF335B83,
+            ()->startActivity(new Intent(this,LocalVideoActivity.class)));
 
         LinearLayout modelPanel=card(content);
         put(modelPanel,label("Automatic model storage",19,WHITE,true));gap(modelPanel,7);
