@@ -80,7 +80,9 @@ public final class StudioUi {
     }
     public static void styleButton(Activity a,Button button,int fill,String description,Runnable action){
         button.setAllCaps(false);
-        button.setTextColor(WHITE);
+        int r=(fill>>>16)&255,g=(fill>>>8)&255,b=(fill)&255;
+        int brightness=(r*299+g*587+b*114)/1000;
+        button.setTextColor(brightness>155?0xFF102033:WHITE);
         button.setTextSize(14);
         button.setTypeface(Typeface.DEFAULT,Typeface.BOLD);
         button.setGravity(Gravity.CENTER);
