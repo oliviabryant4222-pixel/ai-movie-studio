@@ -10,6 +10,11 @@ on:
 permissions:
   contents: read
 
+# Only the latest commit on this beta branch needs an expensive native APK build.
+concurrency:
+  group: realframe-v22-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test-and-build:
     runs-on: ubuntu-latest
