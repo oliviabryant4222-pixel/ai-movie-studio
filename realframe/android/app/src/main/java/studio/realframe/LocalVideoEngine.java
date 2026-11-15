@@ -28,6 +28,12 @@ public final class LocalVideoEngine {
 
     public static boolean isAvailable(){return available;}
     public static String issue(){return problem;}
+    private static native String nativeLastIssue();
+    public static String lastNativeIssue(){
+        if(!available)return "JNI unavailable: "+problem;
+        try{return nativeLastIssue();}
+        catch(Throwable t){return "Native diagnostics unavailable: "+t.getMessage();}
+    }
 
     public static int generate(String diffusionPath,String t5Path,String vaePath,
                                String prompt,String negative,
