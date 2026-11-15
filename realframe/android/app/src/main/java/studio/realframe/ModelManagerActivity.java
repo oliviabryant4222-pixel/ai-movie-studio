@@ -161,7 +161,7 @@ public final class ModelManagerActivity extends Activity {
             if(uri.isEmpty()){sourceStatus.setText("No local model source selected.");return;}
             sourceStatus.setText("Selected "+prefs.getString("kind","file")+": "+
                 prefs.getString("display",Uri.parse(uri).getLastPathSegment())+
-                "\nReference saved for future compatible model loader.");
+                "\nSource reference saved only. Open Local AI Image to import a usable checkpoint.");
         }
     }
     @Override protected void onActivityResult(int request,int resultCode,Intent data){
@@ -186,7 +186,7 @@ public final class ModelManagerActivity extends Activity {
                 .putString("kind",request==PICK_FOLDER?"folder":"file")
                 .putString("display",display).apply();
             refresh();
-            Toast.makeText(this,"Model reference saved. Runtime integration is still required.",Toast.LENGTH_LONG).show();
+            Toast.makeText(this,"Reference saved. For inference, use Local AI Image or one-tap setup.",Toast.LENGTH_LONG).show();
         }catch(Exception e){Toast.makeText(this,"Could not keep file permission: "+e.getMessage(),Toast.LENGTH_LONG).show();}
     }
 }
