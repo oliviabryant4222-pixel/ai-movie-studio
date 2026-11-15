@@ -133,6 +133,10 @@ public final class AutoVideoModelDownloadService extends Service {
                 message=cancel.get()?"Paused; tap Install again to resume.":
                     (err.getMessage()==null?err.toString():err.getMessage());
             }finally{
+                getSharedPreferences("realframe_video_installer",MODE_PRIVATE).edit()
+                    .putString("last_state",state)
+                    .putString("last_message",message.length()>400?message.substring(0,400):message)
+                    .putLong("last_updated",System.currentTimeMillis()).apply();
                 HttpURLConnection live=connection;if(live!=null)live.disconnect();
                 connection=null;thread=null;lock.set(false);
                 stopForeground(STOP_FOREGROUND_REMOVE);
