@@ -78,5 +78,5 @@ class LocalNativeApiTests(unittest.TestCase):
     def test_version(self):
         s=(ROOT/"android/app/build.gradle.kts").read_text()
         self.assertTrue('applicationId = "studio.realframe.v19"' in s or 'applicationId = "studio.realframe.v20"' in s or 'applicationId = "studio.realframe.v25"' in s)
-        self.assertTrue('versionName = "1.9.0-local-online-hybrid-beta"' in s or 'versionName = "2.0.0-one-tap-local-ai-beta"' in s or 'versionName = "2.5.0-premium-ui-beta"' in s)
+        self.assertTrue('versionName = "1.9.0-local-online-hybrid-beta"' in s or 'versionName = "2.0.0-one-tap-local-ai-beta"' in s or 'versionName = "2.6.0-local-engine-repair"' in s)
 if __name__=="__main__": unittest.main()
