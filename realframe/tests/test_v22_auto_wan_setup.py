@@ -74,7 +74,7 @@ class OneTapWanTests(unittest.TestCase):
     def test_new_version_identifiers(self):
         s=(APP/"build.gradle.kts").read_text()
         self.assertIn('applicationId = "studio.realframe.v25"',s)
-        self.assertIn('versionName = "2.5.0-premium-ui-beta"',s)
+        self.assertIn('versionName = "2.6.0-local-engine-repair"',s)
         s=(JAVA/"StudioDashboardActivity.java").read_text()
         self.assertIn("v2.5",s)
 
