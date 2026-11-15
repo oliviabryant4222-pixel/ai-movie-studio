@@ -131,10 +131,19 @@ public final class LocalVideoActivity extends Activity {
         // Surface missing-weight / missing-native guidance on tap rather than
         // presenting a disabled button that looks broken.
         if(generate!=null)generate.setEnabled(!busy.get());
-        if(setupStatus!=null)
-            setupStatus.setText("WAN auto setup: "+AutoVideoModelDownloadService.state+
-                "\n"+AutoVideoModelDownloadService.message+
+        if(setupStatus!=null){
+            String installerState=AutoVideoModelDownloadService.state;
+            String installerMessage=AutoVideoModelDownloadService.message;
+            if(!AutoVideoModelDownloadService.isDownloading() &&
+                "not_installed".equals(installerState)){
+                SharedPreferences history=getSharedPreferences("realframe_video_installer",MODE_PRIVATE);
+                installerState=history.getString("last_state",installerState);
+                installerMessage=history.getString("last_message",installerMessage);
+            }
+            setupStatus.setText("WAN auto setup: "+installerState+
+                "\n"+installerMessage+
                 "\nDownloaded on this phone: "+(AutoVideoModelDownloadService.partialBytes(this)/1_000_000L)+" MB");
+        }
         if(autoInstall!=null)autoInstall.setEnabled(!AutoVideoModelDownloadService.isDownloading());
     }
 
