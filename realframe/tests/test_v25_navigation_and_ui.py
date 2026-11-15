@@ -73,6 +73,13 @@ class NavigationAndUiAudit(unittest.TestCase):
             self.assertIn(part,s)
         self.assertIn("Internet and provider quotas apply",s)
 
+    def test_home_video_shortcut_opens_correct_mode_not_forced_local_video(self):
+        home=(SRC/"StudioDashboardActivity.java").read_text(encoding="utf-8")
+        create=(SRC/"UnifiedCreateActivity.java").read_text(encoding="utf-8")
+        self.assertIn('next.putExtra("output","video")',home)
+        self.assertIn('"video".equalsIgnoreCase(getIntent().getStringExtra("output"))',create)
+        self.assertIn("output.setSelection(1)",create)
+
     def test_ui_status_and_latest_version(self):
         s=(SRC/"StudioDashboardActivity.java").read_text(encoding="utf-8")
         self.assertIn('label("v2.5"',s)
