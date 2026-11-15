@@ -72,7 +72,8 @@ public final class ReferenceStudioActivity extends Activity {
         Button b=new Button(this);b.setText(title);b.setAllCaps(false);b.setTextSize(14);
         b.setTextColor(WHITE);b.setBackground(shape(color));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(48));
-        lp.topMargin=dp(9);p.addView(b,lp);b.setOnClickListener(v->action.run());return b;
+        lp.topMargin=dp(9);p.addView(b,lp);
+        StudioUi.styleButton(this,b,color,title,action);return b;
     }
     private EditText input(LinearLayout p,String caption,String value){
         TextView label=label(caption,13,MUTED,true);label.setPadding(0,dp(11),0,dp(4));put(p,label);
@@ -107,7 +108,7 @@ public final class ReferenceStudioActivity extends Activity {
         LinearLayout root=col();root.setBackgroundColor(BG);
         root.setPadding(dp(16),dp(15),dp(16),dp(8));setContentView(root);
         TextView title=label("←   REALFRAME · REFERENCE AI",22,WHITE,true);
-        title.setOnClickListener(v->finish());put(root,title);gap(root,6);
+        StudioUi.bind(this,title,"Back to studio",this::finish);put(root,title);gap(root,6);
         put(root,label("True on-device img2img • character continuity aid • no photo uploads",12,TEAL,false));
         ScrollView scroll=new ScrollView(this);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
         LinearLayout p=col();p.setBackground(shape(CARD));
