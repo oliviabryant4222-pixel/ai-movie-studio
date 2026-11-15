@@ -87,6 +87,8 @@ public final class UnifiedCreateActivity extends Activity {
         p.setBackground(box(PANEL,20));scroll.addView(p);
         block(p,"One prompt, three modes","Cloud generation needs your approval; local mode never uploads.");
         output=choose(p,"OUTPUT",new String[]{"Image","Video"});
+        if(getIntent()!=null && "video".equalsIgnoreCase(getIntent().getStringExtra("output")))
+            output.setSelection(1);
         mode=choose(p,"PROCESSING MODE",new String[]{"Hybrid (prefer local if ready)","Local only","Online only"});
         String preferred=getSharedPreferences("realframe_model_manager",MODE_PRIVATE)
                               .getString("mode","hybrid");
