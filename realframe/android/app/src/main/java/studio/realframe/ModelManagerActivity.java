@@ -71,7 +71,7 @@ public final class ModelManagerActivity extends Activity {
         b.setTextColor(TEXT);b.setBackground(box(0xFF34345C));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(47));
         lp.topMargin=dp(8);c.addView(b,lp);
-        b.setOnClickListener(v->action.run());
+        StudioUi.styleButton(this,b,0xFF484181,text,action);
     }
     private void pickModel(boolean directory){
         Intent intent=new Intent(directory?Intent.ACTION_OPEN_DOCUMENT_TREE:Intent.ACTION_OPEN_DOCUMENT);
@@ -104,7 +104,7 @@ public final class ModelManagerActivity extends Activity {
         prefs=getSharedPreferences(prefsName,MODE_PRIVATE);
         LinearLayout root=new LinearLayout(this);root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(17),dp(15),dp(17),dp(9));root.setBackgroundColor(BACK);setContentView(root);
-        TextView title=label("←   Model & Mode Manager",23,TEXT,true);title.setOnClickListener(v->finish());
+        TextView title=label("←   Model & Mode Manager",23,TEXT,true);StudioUi.bind(this,title,"Back to studio",this::finish);
         root.addView(title);
         TextView subtitle=label("Choose online, local or hybrid workflows · model file imports",13,MUTED,false);
         subtitle.setPadding(0,dp(8),0,dp(14));root.addView(subtitle);
