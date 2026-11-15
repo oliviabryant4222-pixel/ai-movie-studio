@@ -133,7 +133,7 @@ Java_studio_realframe_LocalImageEngine_nativeGenerate(
   // No unsupported QNN/NPU claims. Default GGML CPU backend is used.
   sd_ctx_t *ptr=new_sd_ctx(&config);
   if(!ptr) {
-    javaError(env,"Local diffusion model failed to load. Check checkpoint format, model components and available RAM.; native detail: "+rf_latest_native_issue()");return nullptr;
+    javaError(env,"Local diffusion model failed to load. Check checkpoint format, model components and available RAM.; native detail: "+rf_latest_native_issue());return nullptr;
   }
   Scope scope(ptr);
   {
@@ -217,7 +217,7 @@ Java_studio_realframe_LocalImageEngine_nativeGenerateBatch(
   config.enable_mmap=true;
   sd_ctx_t* ptr=new_sd_ctx(&config);
   if(!ptr){
-    javaError(env,"Could not load model: check checkpoint type, model components and RAM; native detail: "+rf_latest_native_issue()");
+    javaError(env,"Could not load model: check checkpoint type, model components and RAM; native detail: "+rf_latest_native_issue());
     return 0;
   }
   Scope scope(ptr);
