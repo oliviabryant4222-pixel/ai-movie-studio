@@ -180,6 +180,7 @@ public final class StudioDashboardActivity extends Activity {
         heading("ONE-TAP LOCAL AI SETUP","App installs the open-source image model automatically");
         LinearLayout setup=card(content,CARD);
         tile(setup,"✦","GET LOCAL AI READY","No manual AI files, apps, or API keys",CYAN,()->open(QuickStartActivity.class));
+        tile(setup,"▣","Device Health & Model Storage","Check phone inference; safely remove automatic weights",ACCENT,()->open(StudioHealthActivity.class));
         heading("Create a new project","One prompt, local/online/hybrid modes and character presets");
         LinearLayout creator=card(content,CARD);
         tile(creator,"✦","UNIFIED CREATOR","New: intelligent routing + privacy consent",ACCENT,()->open(UnifiedCreateActivity.class));
