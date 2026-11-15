@@ -59,6 +59,18 @@ class OneTapWanTests(unittest.TestCase):
         self.assertEqual(svc.get(ns+"exported"),"false")
         self.assertEqual(svc.get(ns+"foregroundServiceType"),"dataSync")
 
+    def test_eight_image_batch_uses_sequential_native_pipeline(self):
+        ui=(JAVA/"LocalImageActivity.java").read_text()
+        api=(JAVA/"LocalApiService.java").read_text()
+        web=(JAVA/"LocalApiWebPage.java").read_text()
+        bridge=(JAVA/"LocalImageEngine.java").read_text()
+        self.assertIn('new String[]{"1","2","3","4","5","6","7","8"}',ui)
+        self.assertIn('status.put("max_image_batch",8)',api)
+        self.assertIn('if(count<1||count>8)',api)
+        self.assertIn('new String',ui)
+        self.assertIn('options=video?[5,9,17,33]:[1,2,3,4,5,6,7,8]',web)
+        self.assertIn('count > 8',bridge)
+
     def test_new_version_identifiers(self):
         s=(APP/"build.gradle.kts").read_text()
         self.assertIn('applicationId = "studio.realframe.v22"',s)
