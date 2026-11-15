@@ -69,8 +69,8 @@ class VisualContinuityTests(unittest.TestCase):
                          "LocalApiActivity.class"):
             self.assertIn(activity,dash)
         gradle=(APP/"build.gradle.kts").read_text()
-        self.assertIn('applicationId = "studio.realframe.v23"',gradle)
-        self.assertIn('versionName = "2.3.0-device-health-rc"',gradle)
+        self.assertIn('applicationId = "studio.realframe.v24"',gradle)
+        self.assertIn('versionName = "2.4.0-samsung-build"',gradle)
     def test_local_image_studio_can_still_auto_setup(self):
         self.assertIn("QuickStartActivity.class",(J/"LocalImageActivity.java").read_text())
         self.assertIn("gpustack/stable-diffusion-v1-5-GGUF",
