@@ -127,7 +127,9 @@ public final class LocalVideoActivity extends Activity {
         if(engineInfo!=null)engineInfo.setText(LocalVideoEngine.isAvailable()
             ? "Native Wan CPU engine compiled ✓ (device inference unverified)"
             : "Native video engine missing: "+LocalVideoEngine.issue());
-        if(generate!=null)generate.setEnabled(!busy.get() && allImported() && LocalVideoEngine.isAvailable());
+        // Surface missing-weight / missing-native guidance on tap rather than
+        // presenting a disabled button that looks broken.
+        if(generate!=null)generate.setEnabled(!busy.get());
         if(setupStatus!=null)
             setupStatus.setText("WAN auto setup: "+AutoVideoModelDownloadService.state+
                 "\n"+AutoVideoModelDownloadService.message+
@@ -359,8 +361,25 @@ public final class LocalVideoActivity extends Activity {
             .putLong("last_test_ms",System.currentTimeMillis()).apply();
     }
     private void generate(){
-        if(!allImported()){toast("Import all 3 compatible video model components first");return;}
-        if(!LocalVideoEngine.isAvailable()){toast("Native CPU video engine unavailable");return;}
+        if(!allImported()){
+            new AlertDialog.Builder(this)
+                .setTitle("WAN video weights are missing")
+                .setMessage("Real on-device text-to-video needs three licensed components: Wan 1.3B Q4, UMT5 encoder and VAE (~4.73 GB total). Installation is automatic IN this app. This is an experimental CPU renderer; 12 GB physical RAM may still be insufficient.")
+                .setPositiveButton("ONE-TAP WAN MODEL SETUP",(d,w)->confirmAutoInstall())
+                .setNeutralButton("Make cinematic MP4 instead",(d,w)->
+                    startActivity(new Intent(this,StoryMovieComposerActivity.class)))
+                .setNegativeButton("Cancel",null).show();
+            return;
+        }
+        if(!LocalVideoEngine.isAvailable()){
+            new AlertDialog.Builder(this)
+                .setTitle("Native WAN engine cannot load")
+                .setMessage(LocalVideoEngine.issue())
+                .setPositiveButton("Device Health",(d,w)->
+                    startActivity(new Intent(this,StudioHealthActivity.class)))
+                .setNegativeButton("Close",null).show();
+            return;
+        }
         if(!busy.compareAndSet(false,true))return;
         String phrase=prompt.getText().toString().trim();
         String bad=negative.getText().toString();
@@ -419,9 +438,11 @@ public final class LocalVideoActivity extends Activity {
             }catch(Throwable ex){
                 long elapsed=(SystemClock.elapsedRealtime()-startedAt)/1000;
                 String detail=ex.getMessage()==null?ex.getClass().getSimpleName():ex.getMessage();
+                String nativeIssue=LocalVideoEngine.lastNativeIssue();
+                if(nativeIssue!=null&&!nativeIssue.isEmpty())detail+=" | native: "+nativeIssue;
                 recordVideoEvidence("FAILED",detail,resultCount,elapsed);
                 note("LOCAL VIDEO NOT VERIFIED: "+detail+
-                    ". No model success claim. Check RAM and model compatibility.");
+                    ". Open Device Health → Copy diagnostics. CPU Wan may exceed phone RAM. For a usable offline MP4 from images, choose Cinematic Movie Composer.");
             }finally{
                 if(writer[0]!=null)writer[0].close();
                 busy.set(false);
