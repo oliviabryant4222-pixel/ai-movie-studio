@@ -40,9 +40,9 @@ class FinalVideoProofTests(unittest.TestCase):
         self.assertIn("LocalVideoActivity.class",health)
     def test_new_version(self):
         gradle=(APP/"build.gradle.kts").read_text()
-        self.assertIn('applicationId = "studio.realframe.v24"',gradle)
-        self.assertIn('versionName = "2.4.0-samsung-build"',gradle)
+        self.assertIn('applicationId = "studio.realframe.v25"',gradle)
+        self.assertIn('versionName = "2.5.0-premium-ui-beta"',gradle)
         dash=(JAVA/"StudioDashboardActivity.java").read_text()
-        self.assertIn('label("v2.4"',dash)
+        self.assertIn('label("v2.5"',dash)
 
 if __name__=="__main__":unittest.main()
