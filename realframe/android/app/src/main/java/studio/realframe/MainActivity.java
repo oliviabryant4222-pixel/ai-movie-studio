@@ -25,7 +25,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/** Native Android prototype: local NPU companion + optional HF Gradio + clip editor. */
+/** Advanced project workspace; fully integrated with the native local AI studio. */
 public final class MainActivity extends Activity {
     private static final int PICK_IMAGE = 1001, PICK_CLIPS = 1002, EXPORT_BACKUP = 1003, IMPORT_BACKUP = 1004;
     private StudioStore store;
@@ -60,14 +60,17 @@ public final class MainActivity extends Activity {
     private int dp(int value) { return Math.round(value * getResources().getDisplayMetrics().density); }
     private TextView text(String value, int size) {
         TextView tv = new TextView(this); tv.setText(value); tv.setTextSize(size);
-        tv.setTextColor(Color.rgb(30,36,47)); tv.setPadding(dp(2),dp(7),dp(2),dp(7));
+        tv.setTextColor(StudioUi.WHITE); tv.setPadding(dp(2),dp(7),dp(2),dp(7));
         return tv;
     }
     private void title(String value) { TextView t = text(value, 22); t.setTypeface(null, 1); page.addView(t); }
-    private void note(String value) { TextView t = text(value, 14); t.setTextColor(Color.rgb(85,93,105)); page.addView(t); }
+    private void note(String value) { TextView t = text(value, 14); t.setTextColor(StudioUi.MUTED); page.addView(t); }
     private EditText field(String title, String initial, boolean multi) {
         page.addView(text(title, 14));
         EditText e = new EditText(this); e.setText(initial);
+        e.setTextColor(StudioUi.WHITE);e.setHintTextColor(StudioUi.MUTED);
+        e.setPadding(dp(13),dp(10),dp(13),dp(10));
+        e.setBackground(StudioUi.surface(this,0xFF243751,13));
         e.setTextSize(15); e.setSingleLine(!multi);
         if (multi) { e.setMinLines(3); e.setGravity(android.view.Gravity.TOP); }
         page.addView(e, new LinearLayout.LayoutParams(-1,-2));
@@ -82,20 +85,13 @@ public final class MainActivity extends Activity {
     }
     private Button button(String label, Runnable fn) {
         Button b = new Button(this);
-        b.setText(label); b.setTextSize(14); b.setAllCaps(false);
-        b.setTextColor(Color.WHITE);
-        android.graphics.drawable.GradientDrawable d = new android.graphics.drawable.GradientDrawable(
-                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[]{0xFF5B4CCB, 0xFF3C89A3});
-        d.setCornerRadius(dp(14)); b.setBackground(d);
-        b.setMinHeight(dp(50));
-        b.setPadding(dp(12), dp(8), dp(12), dp(8));
-        b.setOnClickListener(v -> { try { fn.run(); } catch (Exception e) { notifyUser(e.getMessage()); } });
+        b.setText(label);
+        StudioUi.styleButton(this,b,0xFF5843A3,label,fn);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1,-2);
         lp.setMargins(0,dp(5),0,dp(5)); page.addView(b, lp); return b;
     }
     private void sep() {
-        View line = new View(this); line.setBackgroundColor(Color.rgb(222,225,231));
+        View line = new View(this); line.setBackgroundColor(StudioUi.OUTLINE);
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(1));
         lp.setMargins(0,dp(8),0,dp(8)); page.addView(line, lp);
     }
@@ -104,7 +100,8 @@ public final class MainActivity extends Activity {
         root = new LinearLayout(this); root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(14), dp(14), dp(14), dp(6));
         root.setBackgroundColor(0xFF0B1120); setContentView(root);
-        TextView header = text("REALFRAME  /  STUDIO  1.3", 19);
+        TextView header = text("←   REALFRAME  /  STUDIO  2.5", 19);
+        StudioUi.bind(this,header,"Back to studio dashboard",()->StudioUi.open(this,StudioDashboardActivity.class));
         header.setTextColor(Color.WHITE);
         header.setTypeface(null, 1); root.addView(header);
         HorizontalScrollView menuScroll = new HorizontalScrollView(this);
@@ -117,7 +114,7 @@ public final class MainActivity extends Activity {
             bg.setColor(name.equals(tab) ? 0xFF5845A1 : 0xFF202C42);
             bg.setCornerRadius(dp(16)); b.setBackground(bg);
             b.setPadding(dp(14),dp(5),dp(14),dp(5));
-            b.setOnClickListener(v -> navigate(name));
+            StudioUi.bind(this,b,"Open "+name+" workspace tab",()->navigate(name));
             LinearLayout.LayoutParams tabLp = new LinearLayout.LayoutParams(-2,dp(42));
             tabLp.setMargins(dp(3),dp(4),dp(3),dp(7)); menu.addView(b, tabLp);
         }
@@ -126,7 +123,8 @@ public final class MainActivity extends Activity {
         page = new LinearLayout(this); page.setOrientation(LinearLayout.VERTICAL);
         page.setPadding(dp(14),dp(12),dp(14),dp(26));
         android.graphics.drawable.GradientDrawable paper = new android.graphics.drawable.GradientDrawable();
-        paper.setColor(0xFFF9FAFF); paper.setCornerRadius(dp(19)); page.setBackground(paper);
+        paper.setColor(StudioUi.CARD); paper.setCornerRadius(dp(19));
+        paper.setStroke(dp(1),StudioUi.OUTLINE);page.setBackground(paper);
         scroll.addView(page);
         root.addView(scroll, new LinearLayout.LayoutParams(-1,0,1));
     }
@@ -153,7 +151,7 @@ public final class MainActivity extends Activity {
 
     private void showHome() {
         layout("Home"); title("Your mobile AI production studio");
-        note("No extra generator app required for online image/video demos. Free AI tab opens Hugging Face model demos inside this app. Internet + provider quotas apply. Fully offline model generation is NOT implemented yet.");
+        note("One studio: native CPU image AI offline after in-app model setup, optional Wan video lab, and hosted models with provider quotas. Use Home → GET LOCAL AI READY for model setup. This workspace handles projects, characters, jobs and clips.");
         button("🌐 Generate images — no API token", () -> openFreeStudio("image"));
         button("🎬 Generate videos — no API token", () -> openFreeStudio("video"));
         button("📸 Image / 🎬 Video generation", this::showGenerate);
