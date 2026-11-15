@@ -69,7 +69,7 @@ public final class UnifiedCreateActivity extends Activity {
         btn.setBackground(box(color,16));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(52));
         lp.topMargin=dp(12);p.addView(btn,lp);
-        btn.setOnClickListener(v->onClick.run());
+        StudioUi.styleButton(this,btn,color,title,onClick);
         return btn;
     }
 
@@ -79,7 +79,7 @@ public final class UnifiedCreateActivity extends Activity {
         LinearLayout root=column();root.setPadding(dp(16),dp(16),dp(16),dp(8));
         root.setBackgroundColor(BG);setContentView(root);
         TextView title=label("←   REALFRAME CREATE",24,WHITE,true);
-        title.setOnClickListener(v->finish());put(root,title);gap(root,5);
+        StudioUi.bind(this,title,"Back to studio",this::finish);put(root,title);gap(root,5);
         put(root,label("Choose Local • Online • Hybrid, then create with consistent prompts.",12,TEAL,false));
         gap(root,14);
         ScrollView scroll=new ScrollView(this);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
