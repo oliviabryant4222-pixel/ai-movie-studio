@@ -25,8 +25,10 @@ class LocalProofContractTests(unittest.TestCase):
     def test_proof_uses_actual_native_model_not_cloud(self):
         src=(JAVA/"LocalProofActivity.java").read_text()
         self.assertIn("LocalImageEngine.generate(",src)
-        self.assertIn("pixels.length!=256*256",src)
-        self.assertIn("Bitmap.createBitmap(pixels",src)
+        self.assertIn("FAST LOW-RAM TEST (128px / 1 step)",src)
+        self.assertIn("startTest(256,4)",src)
+        self.assertIn("pixels.length!=size*size",src)
+        self.assertIn("Bitmap.createBitmap(pixels,size,size",src)
         self.assertIn("LocalInferenceProbe.classify(",src)
         self.assertIn("internetAvailable()",src)
         self.assertIn("LocalImageEngine.cancel()",src)
