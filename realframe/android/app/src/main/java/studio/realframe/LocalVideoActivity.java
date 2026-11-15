@@ -84,7 +84,7 @@ public final class LocalVideoActivity extends Activity {
         btn.setText(title);btn.setTextColor(WHITE);btn.setBackground(rounded(color));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(49));
         lp.topMargin=dp(9);p.addView(btn,lp);
-        btn.setOnClickListener(v->{try{action.run();}catch(Exception error){toast(error.getMessage());}});
+        StudioUi.styleButton(this,btn,color,title,action);
         return btn;
     }
     private Spinner select(LinearLayout p,String title,String[] values) {
@@ -142,7 +142,7 @@ public final class LocalVideoActivity extends Activity {
         LinearLayout root=column();root.setBackgroundColor(BG);
         root.setPadding(dp(15),dp(15),dp(15),dp(12));setContentView(root);
         TextView header=label("←  LOCAL AI VIDEO • LAB",22,WHITE,true);
-        header.setOnClickListener(v->finish());put(root,header);gap(root,8);
+        StudioUi.bind(this,header,"Back to studio",this::finish);put(root,header);gap(root,8);
         put(root,label("Experimental text → video • all inference and MP4 encoding on this device",12,TEAL,false));
         gap(root,12);
         ScrollView scroll=new ScrollView(this);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
