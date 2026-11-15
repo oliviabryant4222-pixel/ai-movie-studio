@@ -33,7 +33,9 @@ class LocalProofContractTests(unittest.TestCase):
         self.assertNotIn("HttpURLConnection",src)
         self.assertNotIn("WebStudioActivity",src)
         self.assertNotIn("startService(",src)
-        self.assertIn("This is not evidence",src)
+        self.assertIn("LOCAL TEST NOT VERIFIED",src)
+        self.assertIn('putString("last_result","FAILED")',src)
+        self.assertIn("LocalImageEngine.lastNativeIssue()",src)
     def test_actions_runs_pure_java_probe(self):
         yml=(ROOT.parent/".github/workflows/realframe-v21-build.yml").read_text()
         self.assertIn("TestLocalInferenceProbe.java",yml)
