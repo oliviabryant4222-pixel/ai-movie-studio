@@ -49,6 +49,7 @@ public final class LocalVideoActivity extends Activity {
     private final ExecutorService worker=Executors.newSingleThreadExecutor();
     private final AtomicBoolean busy=new AtomicBoolean(false);
     private volatile boolean cancelImport;
+    private boolean lowRamAcknowledged;
     private TextView status,modelInfo,engineInfo;
     private EditText prompt,negative,seed;
     private Spinner resolution,frameCount,steps;
@@ -393,6 +394,24 @@ public final class LocalVideoActivity extends Activity {
         int w=dimensions[resolution.getSelectedItemPosition()];
         int n=frames[frameCount.getSelectedItemPosition()];
         int step=Integer.parseInt(steps.getSelectedItem().toString());
+        ActivityManager am=(ActivityManager)getSystemService(ACTIVITY_SERVICE);
+        ActivityManager.MemoryInfo info=new ActivityManager.MemoryInfo();
+        am.getMemoryInfo(info);
+        if(info.availMem<6_000_000_000L && !lowRamAcknowledged){
+            busy.set(false);
+            refresh();
+            new AlertDialog.Builder(this)
+                .setTitle("WAN might exceed available Samsung RAM")
+                .setMessage("Only "+(info.availMem/1_000_000_000L)+
+                    " GB free RAM is currently available. Even the Q4 Wan 1.3B model plus UMT5 and the video decoder can use many gigabytes. A 12 GB PHONE is not the same as 12 GB free model RAM. The Android process may be killed before rendering a frame.")
+                .setPositiveButton("Try experimental WAN anyway",(d,w)->{
+                    lowRamAcknowledged=true;generate();
+                })
+                .setNeutralButton("Use LOCAL story movie",(d,w)->
+                    startActivity(new Intent(this,LocalAutoFilmActivity.class)))
+                .setNegativeButton("Cancel",null).show();
+            return;
+        }
         refresh();
         note("Native video model loading. May use multiple GB RAM and take a long time...");
         final String diffusion=path("diffusion"),t5=path("t5"),vae=path("vae");
