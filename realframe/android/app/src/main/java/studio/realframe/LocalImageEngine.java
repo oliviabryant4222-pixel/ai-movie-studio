@@ -42,7 +42,10 @@ public final class LocalImageEngine {
         return nativeGenerate(modelPath, prompt.trim(), negative==null?"":negative.trim(),
                               width, height, steps, seed, threads);
     }
+    /** True while any native image OR Wan video job owns the shared model gate. */
+    public static boolean isBusy() { return loaded && nativeBusy(); }
     public static void cancel() { if (loaded) nativeCancel(); }
+    private static native boolean nativeBusy();
 
     /** Called synchronously on the rendering worker after each completed image.
      * The consumer should save the image promptly; JNI releases its native pixels
