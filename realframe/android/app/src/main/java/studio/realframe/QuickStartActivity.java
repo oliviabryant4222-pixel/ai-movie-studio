@@ -109,9 +109,9 @@ public final class QuickStartActivity extends Activity {
         button(note,"◇ Reference Photo AI (local img2img)",0xFF544171,()->open(ReferenceStudioActivity.class));
         button(note,"✦ Automatic Local AI Story → MP4",0xFF544171,()->open(LocalAutoFilmActivity.class));
         button(note,"▶ Cinematic Movie from Gallery Photos",0xFF544171,()->open(StoryMovieComposerActivity.class));
-        button(note,"▶ Experimental LOCAL AI video lab",0xFF544171,()->open(LocalVideoActivity.class));
+        button(note,"⬇ WAN Video Lab + Optional One-Tap Model Setup",0xFF544171,()->open(LocalVideoActivity.class));
         gap(note,12);
-        put(note,label("Video caveat: local Wan video requires additional large model components; the one-tap installer currently sets up LOCAL IMAGE AI, not Wan video. Fully local long videos on a 12GB phone are not validated.",12,WARN,false));
+        put(note,label("Video caveat: One-Tap WAN Q4 Model Setup is available INSIDE the separate Local Video Lab (about 4.73 GB, 3 components). This screen installs the LOCAL IMAGE model. Actual long/real-motion local video on a 12GB phone is still unverified.",12,WARN,false));
         refresh();
     }
     private boolean wifi(){
