@@ -165,12 +165,17 @@ public final class QuickStartActivity extends Activity {
     }
     private void refresh(){
         boolean readyModel=AutoModelDownloadService.installed(this);
+        boolean nativeReady=LocalImageEngine.isAvailable();
         boolean running=AutoModelDownloadService.isDownloading();
-        ready.setText(readyModel ? "● LOCAL IMAGE AI READY ✓" :
+        ready.setText(readyModel && nativeReady ? "● LOCAL MODEL + ENGINE INSTALLED (test pending)" :
+            readyModel ? "⚠ MODEL INSTALLED; NATIVE ENGINE UNAVAILABLE" :
             running ? "● INSTALLING LOCAL IMAGE AI" : "○ LOCAL MODEL NOT INSTALLED");
         if(readyModel){
-            progress.setText("Open Local Image and create with Internet ON or OFF.\n"+
-                "All model inference stays on the phone CPU.");
+            progress.setText(nativeReady ?
+                "Model and native engine detected. Use TEST LOCAL AI to verify a real render.\n"+
+                "Local inference uses the phone CPU with Internet ON or OFF." :
+                "The checkpoint is installed, but the native engine could not load: "+
+                LocalImageEngine.unavailableReason());
         }else{
             long size=AutoModelDownloadService.partialBytes(this);
             progress.setText("Status: "+AutoModelDownloadService.state+"\n"+
