@@ -73,9 +73,9 @@ class OneTapWanTests(unittest.TestCase):
 
     def test_new_version_identifiers(self):
         s=(APP/"build.gradle.kts").read_text()
-        self.assertIn('applicationId = "studio.realframe.v22"',s)
-        self.assertIn('versionName = "2.2.0-auto-wan-beta"',s)
+        self.assertIn('applicationId = "studio.realframe.v23"',s)
+        self.assertIn('versionName = "2.3.0-device-health-rc"',s)
         s=(JAVA/"StudioDashboardActivity.java").read_text()
-        self.assertIn("BETA 2.2",s)
+        self.assertIn("RC 2.3",s)
 
 if __name__=="__main__":unittest.main()
