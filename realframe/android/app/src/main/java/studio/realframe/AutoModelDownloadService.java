@@ -129,6 +129,10 @@ public final class AutoModelDownloadService extends Service {
                 message=cancel.get()?"Paused. Tap install to resume.":
                     (error.getMessage()==null?error.toString():error.getMessage());
             }finally{
+                getSharedPreferences("realframe_image_installer",MODE_PRIVATE).edit()
+                    .putString("last_state",state)
+                    .putString("last_message",message.length()>400?message.substring(0,400):message)
+                    .putLong("last_updated",System.currentTimeMillis()).apply();
                 HttpURLConnection active=currentConnection;
                 if(active!=null)active.disconnect();
                 currentConnection=null;downloadThread=null;
