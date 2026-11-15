@@ -38,6 +38,7 @@ public final class WebStudioActivity extends Activity {
     private WebView web;
     private EditText prompt;
     private TextView providerStatus;
+    private boolean providerFailed;
     private ValueCallback<Uri[]> pendingFiles;
     private String currentSpace = IMAGE_SPACE;
 
@@ -140,22 +141,27 @@ public final class WebStudioActivity extends Activity {
         CookieManager.getInstance().setAcceptThirdPartyCookies(web, true);
         web.setWebViewClient(new WebViewClient() {
             @Override public void onPageStarted(WebView view,String url,android.graphics.Bitmap favicon){
+                providerFailed=false;
                 if(providerStatus!=null)
                     providerStatus.setText("Connecting to hosted AI · network and provider quota required...");
             }
             @Override public void onPageFinished(WebView view,String url){
-                if(providerStatus!=null)
+                if(!providerFailed&&providerStatus!=null)
                     providerStatus.setText("Provider page loaded. Generating requires its own queue/login/quota.");
             }
             @Override public void onReceivedError(WebView view,WebResourceRequest request,WebResourceError error){
-                if(request.isForMainFrame()&&providerStatus!=null)
+                if(request.isForMainFrame()&&providerStatus!=null){
+                    providerFailed=true;
                     providerStatus.setText("Provider failed to load: "+error.getDescription()+
                         ". Tap Retry, Alternate image, or Local AI.");
+                }
             }
             @Override public void onReceivedHttpError(WebView view,WebResourceRequest request,WebResourceResponse response){
-                if(request.isForMainFrame()&&providerStatus!=null)
+                if(request.isForMainFrame()&&providerStatus!=null){
+                    providerFailed=true;
                     providerStatus.setText("Hosted provider HTTP "+response.getStatusCode()+
                         ". You can retry, switch provider, or use on-phone Local AI.");
+                }
             }
             @Override public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
                 Uri uri = request.getUrl();
