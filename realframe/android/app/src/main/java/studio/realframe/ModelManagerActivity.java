@@ -28,11 +28,10 @@ import android.widget.Toast;
 import java.io.InputStream;
 
 /**
- * Model/reference manager for the forthcoming local renderer.
+ * Model manager for the included native CPU image renderer.
  *
- * Importing models only persists their SAF URIs. It does NOT enable inference:
- * the APK must additionally contain a compatible native diffusion runtime and
- * a model loader able to consume the selected model's format/architecture.
+ * Model-manager picker saves a SAF reference only; the working local
+ * renderer/one-tap installer are accessible through LocalImageActivity/QuickStartActivity.
  * Avoids costly multi-GB copies and respects Android scoped storage.
  */
 public final class ModelManagerActivity extends Activity {
@@ -85,8 +84,8 @@ public final class ModelManagerActivity extends Activity {
         prefs.edit().putString("mode",value).apply(); refresh();
     }
     private boolean backendReady(){
-        // IMPORTANT: The current APK deliberately does not ship or expose a native AI renderer.
-        // Loading a model URI is not equivalent to having an inference pipeline.
+        // CPU-native engine ships in the APK. A SAF reference is not sufficient:
+        // install one-tap weights or import through LocalImageActivity.
         return LocalImageEngine.isAvailable();
     }
     private String readableMemory(){
@@ -114,15 +113,15 @@ public final class ModelManagerActivity extends Activity {
 
         LinearLayout modes=card("Generation preference");
         gap(modes,8);
-        message(modes,"Auto/Hybrid routes generation online until a native offline AI engine is genuinely installed. Offline editing always stays on this device.");
+        message(modes,"Hybrid prefers on-device image generation when the local model and enough RAM are available. Hosted AI asks consent.");
         button(modes,"☁  Online only",()->setMode("online"));
-        button(modes,"📱  Local only (editing works; AI not installed)",()->setMode("local"));
+        button(modes,"📱  Local only (native CPU image AI; model needed)",()->setMode("local"));
         button(modes,"⚡  Hybrid / automatic",()->setMode("hybrid"));
         modeStatus=label("",13,ACCENT,true);gap(modes,7);modes.addView(modeStatus);
 
         LinearLayout files=card("Local model files");
         gap(files,9);
-        message(files,"You may select a downloaded model file or folder without duplicating gigabytes of data. This registers the reference, not a functional neural renderer.");
+        message(files,"Advanced source catalog: selecting a file or folder here saves its reference. For usable image AI, choose one-tap setup or import into Local AI Image.");
         button(files,"Select model FILE (MNN / SD / GGUF etc.)",()->pickModel(false));
         button(files,"Select model FOLDER / checkpoint pack",()->pickModel(true));
         button(files,"Clear selected model reference",()->{
@@ -132,14 +131,14 @@ public final class ModelManagerActivity extends Activity {
 
         LinearLayout nativeCard=card("Native AI engine");
         gap(nativeCard,8);
-        message(nativeCard,"A Snapdragon processor and model file alone do not generate images. A matching SDXL/SD1.5 native runtime with Qualcomm QNN or MNN integration must be compiled into this APK.");
+        message(nativeCard,"RealFrame includes an arm64 CPU-native Stable Diffusion runtime. A compatible local checkpoint is required. Qualcomm QNN/NPU is not yet supported.");
         engineStatus=label("",14,ACCENT,true);gap(nativeCard,8);nativeCard.addView(engineStatus);
         button(nativeCard,"One-tap install AI model (no manual file)",()->
             startActivity(new Intent(this,QuickStartActivity.class)));
         button(nativeCard,"Open local AI image renderer",()->startActivity(new Intent(this,LocalImageActivity.class)));
         button(nativeCard,"Read compatibility details",()->new AlertDialog.Builder(this)
             .setTitle("What does fully local require?")
-            .setMessage("RealFrame now builds stable-diffusion.cpp as an arm64 CPU-native engine and includes a local single-file image checkpoint importer. It does not bundle multi-GB model weights. Qualcomm NPU acceleration is NOT configured and offline video diffusion is NOT available. Use Local AI Image for a compatible checkpoint; the file reference in this manager alone does not activate a model. Cloud demos remain quota-limited.")
+            .setMessage("RealFrame contains stable-diffusion.cpp for arm64 CPU image inference. One-tap setup obtains a licensed SD1.5 Q4 model in the app after consent; no manual model download. Separate native Wan T2V is experimental and needs large additional weights; it is NOT verified on this device. NPU support is unavailable and hosted generation has provider quotas.")
             .setPositiveButton("OK",null).show());
 
         LinearLayout device=card("Device capability");
@@ -154,7 +153,8 @@ public final class ModelManagerActivity extends Activity {
             String mode=prefs.getString("mode","hybrid");
             modeStatus.setText("Selected: "+mode.toUpperCase()+"  ·  Native CPU image engine: "+(backendReady()?"Ready":"Not installed"));
         }
-        if(engineStatus!=null)engineStatus.setText("Status: CPU text-to-image runtime installed if APK native library loaded; image model still required");
+        if(engineStatus!=null)engineStatus.setText("CPU image engine: "+(backendReady()?"available":"unavailable")+
+            " · One-tap model: "+(AutoModelDownloadService.installed(this)?"installed":"not installed"));
         if(stats!=null)stats.setText(readableMemory());
         if(sourceStatus!=null){
             String uri=prefs.getString("uri","");
