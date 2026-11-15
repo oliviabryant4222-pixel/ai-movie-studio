@@ -83,6 +83,7 @@ public final class StudioHealthActivity extends Activity {
         SharedPreferences imageTests=getSharedPreferences("realframe_local_proof",MODE_PRIVATE);
         SharedPreferences videoTests=getSharedPreferences("realframe_video_proof",MODE_PRIVATE);
         String proof=imageTests.getString("last_result","not yet tested");
+        String proofFailure=imageTests.getString("last_error","");
         String wanState=videoTests.getString("last_status","not yet tested");
         String wanDetails=videoTests.getString("last_detail","");
         StudioNavigationAudit.Result destinations=StudioNavigationAudit.check(this);
@@ -102,6 +103,9 @@ public final class StudioHealthActivity extends Activity {
                 " ("+destinations.activities+" screens, "+destinations.services+" services)\n"+
             "Phone local API: "+(LocalApiService.isRunning()?"active":"stopped")+"\n"+
             "Last local image proof: "+proof+"\n"+
+            "Last image error: "+proofFailure+"\n"+
+            "Native image issue: "+LocalImageEngine.lastNativeIssue()+"\n"+
+            "Native Wan issue: "+LocalVideoEngine.lastNativeIssue()+"\n"+
             "LOCAL image with Internet ON: "+(imageTests.getBoolean("local_while_online_verified",false)?"PHYSICAL RENDER VERIFIED":"not verified")+"\n"+
             "LOCAL image Internet OFF: "+(imageTests.getBoolean("fully_offline_verified",false)?"PHYSICAL RENDER VERIFIED":"not verified")+"\n"+
             "Native WAN video proof: "+wanState+"\n"+
