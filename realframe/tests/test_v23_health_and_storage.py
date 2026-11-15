@@ -42,6 +42,6 @@ class HealthAndStorageTests(unittest.TestCase):
     def test_release_version(self):
         gradle=(APP/"build.gradle.kts").read_text()
         self.assertIn('applicationId = "studio.realframe.v25"',gradle)
-        self.assertIn('versionName = "2.5.0-premium-ui-beta"',gradle)
+        self.assertIn('versionName = "2.6.0-local-engine-repair"',gradle)
 
 if __name__=="__main__":unittest.main()
