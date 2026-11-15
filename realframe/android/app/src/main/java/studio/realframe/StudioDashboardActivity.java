@@ -193,7 +193,10 @@ public final class StudioDashboardActivity extends Activity {
         TextView film=label("▶  NEW VIDEO",13,WHITE,true);
         film.setGravity(Gravity.CENTER);film.setBackground(StudioUi.ripple(this,
             StudioUi.gradient(this,0xFF188C8B,0xFF145D79,13),13));
-        StudioUi.bind(this,film,"Create AI video",()->open(LocalVideoActivity.class));
+        StudioUi.bind(this,film,"Create AI video",()->{
+            Intent next=new Intent(this,UnifiedCreateActivity.class);
+            next.putExtra("output","video");startActivity(next);
+        });
         shortcuts.addView(film,new LinearLayout.LayoutParams(0,dp(48),1));
         hero.addView(shortcuts,new LinearLayout.LayoutParams(-1,dp(48)));
     }
