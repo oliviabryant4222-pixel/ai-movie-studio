@@ -65,3 +65,18 @@
 - No unrestricted free cloud GPU, and no safe simultaneous large-model processing guarantee on 12GB hardware.
 
 These limitations are technical, not items solved by more buttons. Keep earlier working v2.0 installed until this build has been tested.
+
+
+## Latest improvement — real on-device proof screen (15 November 2026)
+
+From **Home → GET LOCAL AI READY → TEST LOCAL AI with Internet ON / OFF**, RealFrame can now attempt a physical-device smoke test of the actual native SD model rather than only checking installation or CI build success:
+
+- Confirms that the JNI image engine and an on-device checkpoint are present.
+- Calls `LocalImageEngine.generate()` directly with a small **256 × 256, 4-step, one-image** prompt and displays the **actual returned pixels**. No hosted browser, API key, cloud provider or simulated photo animation is involved in this test.
+- Observes whether Android reports Internet availability *at the beginning and end* and distinguishes an offline render from a local render while connected. Connectivity changing during the test is reported separately.
+- Supports cancellation, handles model/RAM errors without reporting false success and records a local-only summary and timing after a successful render.
+- A successful local image test does **not** verify true local motion video, phone NPU, face-ID lock, quality, long-film generation or absence of unrelated network traffic. Only a test performed on the target handset demonstrates its native runtime.
+
+On-device use: install the in-app SD model once with license consent. Run the proof once with Internet **ON**, then optionally with both Wi-Fi and mobile data **OFF**. If native load/render fails, capture the screen's exact error instead of assuming this feature works. This screen never enables public cloud access or redirects failed requests to online generation.
+
+**Engineering note:** Added pure-Java verdict tests and a Python source-contract test to the v2.1 Android build workflow. CI can check code and produce an APK but cannot certify real device inference.
