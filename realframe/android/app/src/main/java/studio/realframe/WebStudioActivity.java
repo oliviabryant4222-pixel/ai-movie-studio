@@ -52,8 +52,8 @@ public final class WebStudioActivity extends Activity {
         button.setTextSize(12);
         button.setBackground(rounded(0xFF403870));
         button.setPadding(dp(4),dp(7),dp(4),dp(7));
-        button.setOnClickListener(callback);
-        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0, dp(44), 1);
+        StudioUi.styleButton(this,button,0xFF433B80,label,()->callback.onClick(button));
+        LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0, dp(52), 1);
         lp.setMargins(dp(3),dp(4),dp(3),dp(5));
         row.addView(button, lp);
         return button;
@@ -65,7 +65,8 @@ public final class WebStudioActivity extends Activity {
         getWindow().setStatusBarColor(0xFF0B1120); getWindow().setNavigationBarColor(0xFF0B1120);
         root.setPadding(dp(10),dp(10),dp(10),dp(4)); root.setBackgroundColor(0xFF0B1120);
         TextView title = new TextView(this);
-        title.setText("✦  REALFRAME  ·  ONLINE AI");
+        title.setText("←  REALFRAME  ·  ONLINE AI");
+        StudioUi.bind(this,title,"Back to studio",this::finish);
         title.setTextColor(0xFFF6F7FD);
         title.setTextSize(19);
         title.setPadding(dp(8),dp(5),dp(4),dp(5));
@@ -138,7 +139,8 @@ public final class WebStudioActivity extends Activity {
                     startActivityForResult(picker, FILE_CHOOSER);
                     return true;
                 } catch (Exception e) {
-                    pendingFiles = null; toast("File picker not available.");
+                    pendingFiles = null; callback.onReceiveValue(null);
+                    toast("File picker not available.");
                     return false;
                 }
             }
