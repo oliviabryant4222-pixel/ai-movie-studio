@@ -16,6 +16,7 @@
         <activity android:name=".ReferenceStudioActivity" android:exported="false"/>
         <activity android:name=".QuickStartActivity" android:exported="false"/>
         <activity android:name=".LocalProofActivity" android:exported="false"/>
+        <activity android:name=".StudioHealthActivity" android:exported="false"/>
         <activity android:name=".WebStudioActivity" android:exported="false"/>
         <activity android:name=".LocalApiActivity" android:exported="false"/>
         <activity android:name=".LocalWebClientActivity" android:exported="false"/>
