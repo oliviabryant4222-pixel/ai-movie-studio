@@ -8,6 +8,42 @@
 #include "stable-diffusion.h"
 #include <android/log.h>
 
+// Collect the actual upstream loader failure rather than reporting only a
+// generic "generation failed" Toast. Never store prompt text or raw photos.
+static std::mutex rf_log_mutex;
+static std::string rf_last_native_issue;
+static void rf_log_callback(sd_log_level_t severity,const char* message,void*) {
+    if(severity<SD_LOG_WARN || !message) return;
+    std::string line(message);
+    if(line.size()>320) line.resize(320);
+    // Model loaders log local full paths; avoid exposing private Android paths.
+    auto files=line.find("/data/user/");
+    if(files!=std::string::npos) line=line.substr(0,files)+"<private-model-path>";
+    {
+        std::lock_guard<std::mutex> guard(rf_log_mutex);
+        rf_last_native_issue=line;
+    }
+    __android_log_print(severity==SD_LOG_ERROR?ANDROID_LOG_ERROR:ANDROID_LOG_WARN,
+                        "RealFrameNative","%s",line.c_str());
+}
+void rf_begin_native_diagnostics() {
+    { std::lock_guard<std::mutex> guard(rf_log_mutex); rf_last_native_issue.clear(); }
+    sd_set_log_callback(rf_log_callback,nullptr);
+}
+std::string rf_latest_native_issue() {
+    std::lock_guard<std::mutex> guard(rf_log_mutex);
+    return rf_last_native_issue;
+}
+extern "C" JNIEXPORT jstring JNICALL
+Java_studio_realframe_LocalImageEngine_nativeLastIssue(JNIEnv* env,jclass){
+    return env->NewStringUTF(rf_latest_native_issue().c_str());
+}
+extern "C" JNIEXPORT jstring JNICALL
+Java_studio_realframe_LocalVideoEngine_nativeLastIssue(JNIEnv* env,jclass){
+    return env->NewStringUTF(rf_latest_native_issue().c_str());
+}
+
+
 // Shared resource gate across local image and video renderers.
 std::atomic<bool> g_realframe_model_busy{false};
 namespace {
@@ -88,6 +124,7 @@ Java_studio_realframe_LocalImageEngine_nativeGenerate(
   if (model.empty() || prompt.empty()) { javaError(env,"Model and prompt required"); return nullptr; }
   Slot slot;
   if(!slot.owned) {javaError(env,"A local AI model is already loading or generating.");return nullptr;}
+  rf_begin_native_diagnostics();
   sd_ctx_params_t config{};
   sd_ctx_params_init(&config);
   config.model_path=model.c_str();
@@ -96,7 +133,7 @@ Java_studio_realframe_LocalImageEngine_nativeGenerate(
   // No unsupported QNN/NPU claims. Default GGML CPU backend is used.
   sd_ctx_t *ptr=new_sd_ctx(&config);
   if(!ptr) {
-    javaError(env,"Local diffusion model failed to load. Check checkpoint format, model components and available RAM.");return nullptr;
+    javaError(env,"Local diffusion model failed to load. Check checkpoint format, model components and available RAM.; native detail: "+rf_latest_native_issue()");return nullptr;
   }
   Scope scope(ptr);
   {
@@ -172,6 +209,7 @@ Java_studio_realframe_LocalImageEngine_nativeGenerateBatch(
   env->DeleteLocalRef(sinkClass);
   if(!onFrame) {if(!env->ExceptionCheck())javaError(env,"Missing onFrame listener");return 0;}
 
+  rf_begin_native_diagnostics();
   sd_ctx_params_t config{};
   sd_ctx_params_init(&config);
   config.model_path=model.c_str();
@@ -179,7 +217,7 @@ Java_studio_realframe_LocalImageEngine_nativeGenerateBatch(
   config.enable_mmap=true;
   sd_ctx_t* ptr=new_sd_ctx(&config);
   if(!ptr){
-    javaError(env,"Could not load model: check checkpoint type, model components and RAM");
+    javaError(env,"Could not load model: check checkpoint type, model components and RAM; native detail: "+rf_latest_native_issue()");
     return 0;
   }
   Scope scope(ptr);
@@ -295,6 +333,7 @@ Java_studio_realframe_LocalImageEngine_nativeReferenceBatch(
     rgb[3*i+2]=static_cast<uint8_t>(color&255);
   }
   original.clear();
+  rf_begin_native_diagnostics();
   sd_ctx_params_t config{};
   sd_ctx_params_init(&config);
   config.model_path=model.c_str();
@@ -412,6 +451,7 @@ Java_studio_realframe_LocalImageEngine_nativeStoryboard(
   env->DeleteLocalRef(listenerClass);
   if(!onFrame)return 0;
 
+  rf_begin_native_diagnostics();
   sd_ctx_params_t context{};
   sd_ctx_params_init(&context);
   context.model_path=model.c_str();
