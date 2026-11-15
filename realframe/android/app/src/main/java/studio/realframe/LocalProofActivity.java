@@ -112,7 +112,8 @@ public final class LocalProofActivity extends Activity {
         add(panel,label("This test calls the on-phone stable-diffusion.cpp JNI engine directly: 256×256, 4 steps, one image. It does not contact a cloud provider or upload the prompt. Internet availability is checked before and after rendering, not monitored continuously.",13,MUTED,false));
         space(panel,11);
         readiness=label("",14,AQUA,false);add(panel,readiness);
-        testButton=action(panel,"▶ Run real LOCAL image test",0xFF357F74,this::startTest);
+        testButton=action(panel,"▶ Run 256px / 4-step LOCAL image test",0xFF357F74,()->startTest(256,4));
+        action(panel,"◉ FAST LOW-RAM TEST (128px / 1 step)",0xFF34597D,()->startTest(128,1));
         action(panel,"■ Cancel local rendering",0xFF624862,()->{
             if(running.get()){
                 cancelRequested=true;
@@ -132,7 +133,7 @@ public final class LocalProofActivity extends Activity {
         add(panel,label("For a second test, disable mobile data and Wi-Fi in Android Settings and run again. Keep RealFrame open; CPU sampling may be very slow or run out of RAM. Do not start another local generation simultaneously.",12,MUTED,false));
         refresh();
     }
-    private void startTest(){
+    private void startTest(int size,int sampleSteps){
         if(!running.compareAndSet(false,true))return;
         File checkpoint=model();
         if(!LocalImageEngine.isAvailable()||!checkpoint.isFile()){
@@ -143,7 +144,7 @@ public final class LocalProofActivity extends Activity {
         cancelRequested=false;
         boolean onlineAtStart=internetAvailable();
         String checkpointPath=checkpoint.getAbsolutePath();
-        status.setText("Running 4-step real diffusion on this phone. No cloud fallback...");
+        status.setText("Running "+size+"px, "+sampleSteps+"-step real on-phone SD diffusion. No cloud fallback...");
         refresh();
         worker.execute(()->{
             final long started=SystemClock.elapsedRealtime();
@@ -151,16 +152,16 @@ public final class LocalProofActivity extends Activity {
                 int cpuThreads=Math.max(1,Math.min(4,Runtime.getRuntime().availableProcessors()));
                 int[] pixels=LocalImageEngine.generate(checkpointPath,
                     "A red ceramic mug on a wooden table, daylight, realistic photograph",
-                    "text, watermark, distorted",256,256,4,1337L,cpuThreads);
+                    "text, watermark, distorted",size,size,sampleSteps,1337L,cpuThreads);
                 if(cancelRequested)throw new IllegalStateException("Local test was cancelled");
-                if(pixels==null||pixels.length!=256*256)
-                    throw new IllegalStateException("Native generator did not return a complete 256x256 frame");
-                Bitmap bitmap=Bitmap.createBitmap(pixels,256,256,Bitmap.Config.ARGB_8888);
+                if(pixels==null||pixels.length!=size*size)
+                    throw new IllegalStateException("Native generator did not return a complete "+size+"x"+size+" frame");
+                Bitmap bitmap=Bitmap.createBitmap(pixels,size,size,Bitmap.Config.ARGB_8888);
                 boolean onlineAtEnd=internetAvailable();
                 LocalInferenceProbe.Result verdict=LocalInferenceProbe.classify(true,onlineAtStart,onlineAtEnd);
                 long seconds=(SystemClock.elapsedRealtime()-started)/1000;
                 String report=LocalInferenceProbe.summary(verdict)+"\n"+
-                    "Native 256×256 image: SUCCESS; 4 steps; "+seconds+" seconds."+
+                    "Native "+size+"×"+size+" image: SUCCESS; "+sampleSteps+" steps; "+seconds+" seconds."+
                     "\nThis verifies a local render in this test, not Wan video, NPU acceleration or zero network traffic by other apps.";
                 android.content.SharedPreferences.Editor proof=
                     getSharedPreferences("realframe_local_proof",MODE_PRIVATE).edit()
