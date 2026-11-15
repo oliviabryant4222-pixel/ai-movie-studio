@@ -45,7 +45,7 @@ class OneTapModelSetup(unittest.TestCase):
         self.assertIn("UnifiedCreateActivity.class",s)
     def test_online_local_hybrid_unchanged(self):
         dash=(JAVA/"StudioDashboardActivity.java").read_text()
-        self.assertIn("v2.4",dash)
+        self.assertIn("v2.5",dash)
         self.assertIn("QuickStartActivity.class",dash)
         self.assertIn("LocalApiActivity.class",dash)
         self.assertIn("WebStudioActivity.class",dash)
@@ -59,6 +59,6 @@ class OneTapModelSetup(unittest.TestCase):
         self.assertIn(".AutoModelDownloadService",services)
         self.assertIn(".LocalApiService",services)
         gradle=(APP/"build.gradle.kts").read_text()
-        self.assertIn('applicationId = "studio.realframe.v24"',gradle)
-        self.assertIn('versionName = "2.4.0-samsung-build"',gradle)
+        self.assertIn('applicationId = "studio.realframe.v25"',gradle)
+        self.assertIn('versionName = "2.5.0-premium-ui-beta"',gradle)
 if __name__=="__main__":unittest.main()
