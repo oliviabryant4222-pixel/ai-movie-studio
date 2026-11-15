@@ -66,7 +66,8 @@ public final class StoryMovieComposerActivity extends Activity {
         Button b=new Button(this);b.setAllCaps(false);b.setText(title);b.setTextSize(15);
         b.setTextColor(WHITE);b.setBackground(shape(color));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(-1,dp(50));
-        lp.topMargin=dp(9);p.addView(b,lp);b.setOnClickListener(v->task.run());return b;
+        lp.topMargin=dp(9);p.addView(b,lp);
+        StudioUi.styleButton(this,b,color,title,task);return b;
     }
     private Spinner choose(LinearLayout p,String title,String[] choices){
         put(p,label(title,13,MUTED,true));gap(p,5);
@@ -90,7 +91,7 @@ public final class StoryMovieComposerActivity extends Activity {
         LinearLayout root=column();root.setBackgroundColor(BG);
         root.setPadding(dp(17),dp(14),dp(17),dp(9));setContentView(root);
         TextView title=label("←   LOCAL MOVIE COMPOSER",23,WHITE,true);
-        title.setOnClickListener(v->finish());put(root,title);gap(root,6);
+        StudioUi.bind(this,title,"Back to studio",this::finish);put(root,title);gap(root,6);
         put(root,label("Offline crossfades + cinematic pan/zoom → real MP4 • no cloud",13,TEAL,false));
         gap(root,12);
         ScrollView scroll=new ScrollView(this);root.addView(scroll,new LinearLayout.LayoutParams(-1,0,1));
