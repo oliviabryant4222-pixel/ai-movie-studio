@@ -84,6 +84,8 @@ public final class StudioHealthActivity extends Activity {
         SharedPreferences videoTests=getSharedPreferences("realframe_video_proof",MODE_PRIVATE);
         String proof=imageTests.getString("last_result","not yet tested");
         String proofFailure=imageTests.getString("last_error","");
+        SharedPreferences imageInstaller=getSharedPreferences("realframe_image_installer",MODE_PRIVATE);
+        SharedPreferences videoInstaller=getSharedPreferences("realframe_video_installer",MODE_PRIVATE);
         String wanState=videoTests.getString("last_status","not yet tested");
         String wanDetails=videoTests.getString("last_detail","");
         StudioNavigationAudit.Result destinations=StudioNavigationAudit.check(this);
@@ -106,6 +108,10 @@ public final class StudioHealthActivity extends Activity {
             "Last image error: "+proofFailure+"\n"+
             "Native image issue: "+LocalImageEngine.lastNativeIssue()+"\n"+
             "Native Wan issue: "+LocalVideoEngine.lastNativeIssue()+"\n"+
+            "Image model setup: "+imageInstaller.getString("last_state","unknown")+
+                " · "+imageInstaller.getString("last_message","") +"\n"+
+            "Wan model setup: "+videoInstaller.getString("last_state","unknown")+
+                " · "+videoInstaller.getString("last_message","")+"\n"+
             "LOCAL image with Internet ON: "+(imageTests.getBoolean("local_while_online_verified",false)?"PHYSICAL RENDER VERIFIED":"not verified")+"\n"+
             "LOCAL image Internet OFF: "+(imageTests.getBoolean("fully_offline_verified",false)?"PHYSICAL RENDER VERIFIED":"not verified")+"\n"+
             "Native WAN video proof: "+wanState+"\n"+
