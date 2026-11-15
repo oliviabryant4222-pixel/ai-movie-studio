@@ -92,6 +92,7 @@ public final class QuickStartActivity extends Activity {
         });
         openLocal=button(p,"✦ Generate LOCAL AI image",0xFF287B72,()->open(LocalImageActivity.class));
         button(p,"✓ TEST LOCAL AI with Internet ON / OFF",0xFF2E6B77,()->open(LocalProofActivity.class));
+        button(p,"▣ DEVICE HEALTH & MODEL STORAGE",0xFF365C79,()->open(StudioHealthActivity.class));
         button(p,"◉ Run LOCAL AI via browser (Internet ON allowed)",0xFF3F4B82,
             ()->open(LocalApiActivity.class));
         LinearLayout note=panel(body);
