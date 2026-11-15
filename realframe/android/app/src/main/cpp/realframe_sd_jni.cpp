@@ -55,6 +55,11 @@ Java_studio_realframe_LocalImageEngine_nativeVersion(JNIEnv* env, jclass) {
   return env->NewStringUTF(info ? info : "stable-diffusion.cpp / Android CPU");
 }
 
+extern "C" JNIEXPORT jboolean JNICALL
+Java_studio_realframe_LocalImageEngine_nativeBusy(JNIEnv*,jclass) {
+  return g_realframe_model_busy.load() ? JNI_TRUE : JNI_FALSE;
+}
+
 extern "C" JNIEXPORT void JNICALL
 Java_studio_realframe_LocalImageEngine_nativeCancel(JNIEnv* env, jclass) {
   g_cancel_requested.store(true);
