@@ -85,7 +85,8 @@ public final class StudioHealthActivity extends Activity {
         String proof=imageTests.getString("last_result","not yet tested");
         String wanState=videoTests.getString("last_status","not yet tested");
         String wanDetails=videoTests.getString("last_detail","");
-        return "REALFRAME v2.4 Android diagnostics (no prompts/secrets)\n"+
+        StudioNavigationAudit.Result destinations=StudioNavigationAudit.check(this);
+        return "REALFRAME v2.5 Android diagnostics (no prompts/secrets)\n"+
             "Device: "+Build.MANUFACTURER+" "+Build.MODEL+"\n"+
             "Android SDK: "+Build.VERSION.SDK_INT+"\n"+
             "CPU ABIs: "+String.join(", ",Build.SUPPORTED_ABIS)+"\n"+
@@ -97,6 +98,8 @@ public final class StudioHealthActivity extends Activity {
             "Wan components: "+(AutoVideoModelDownloadService.installed(this)?"selected":"not all installed")+"\n"+
             "WAN bridge: "+(LocalVideoEngine.isAvailable()?"loaded (not proof of rendering)":"missing")+"\n"+
             "Native model job active: "+LocalImageEngine.isBusy()+"\n"+
+            "Screen/service registration: "+(destinations.passed()?"PASS":"FAIL")+
+                " ("+destinations.activities+" screens, "+destinations.services+" services)\n"+
             "Phone local API: "+(LocalApiService.isRunning()?"active":"stopped")+"\n"+
             "Last local image proof: "+proof+"\n"+
             "LOCAL image with Internet ON: "+(imageTests.getBoolean("local_while_online_verified",false)?"PHYSICAL RENDER VERIFIED":"not verified")+"\n"+
@@ -124,6 +127,13 @@ public final class StudioHealthActivity extends Activity {
         put(statusPanel,label("On-device status",19,WHITE,true));gap(statusPanel,9);
         report=label("",13,MUTED,false);put(statusPanel,report);
         button(statusPanel,"↻ Refresh device status",0xFF356D72,this::refresh);
+        button(statusPanel,"✓ Check app screen and service routes",0xFF376886,()->{
+            StudioNavigationAudit.Result check=StudioNavigationAudit.check(this);
+            new AlertDialog.Builder(this)
+                .setTitle(check.passed()?"Screen routes verified":"Screen registration issue")
+                .setMessage(check.detail())
+                .setPositiveButton("OK",null).show();
+        });
         button(statusPanel,"▣ Copy diagnostic report (no prompts/tokens)",0xFF49417B,()->{
             ClipboardManager clipboard=(ClipboardManager)getSystemService(Context.CLIPBOARD_SERVICE);
             clipboard.setPrimaryClip(ClipData.newPlainText("RealFrame diagnostics",generateReport()));
