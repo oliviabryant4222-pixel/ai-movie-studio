@@ -74,7 +74,7 @@ public final class LocalImageActivity extends Activity {
         b.setTextColor(WHITE);b.setBackground(shape(color));
         LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(-1,dp(48));
         params.topMargin=dp(9);parent.addView(b,params);
-        b.setOnClickListener(v->{try{task.run();}catch(Exception e){notifyUser(e.getMessage());}});
+        StudioUi.styleButton(this,b,color,text,task);
         return b;
     }
     private Spinner options(LinearLayout parent,String title,String[] choices){
@@ -106,7 +106,7 @@ public final class LocalImageActivity extends Activity {
         getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);
         LinearLayout main=new LinearLayout(this);main.setOrientation(LinearLayout.VERTICAL);
         main.setPadding(dp(16),dp(12),dp(16),dp(8));main.setBackgroundColor(BG);setContentView(main);
-        TextView title=label("←   LOCAL AI IMAGE STUDIO",21,WHITE,true);title.setOnClickListener(v->finish());put(main,title);
+        TextView title=label("←   LOCAL AI IMAGE STUDIO",21,WHITE,true);StudioUi.bind(this,title,"Back to studio",this::finish);put(main,title);
         gap(main,6);
         put(main,label("REAL stable-diffusion.cpp CPU inference · runs on this phone without internet",12,TEAL,false));
         gap(main,10);
