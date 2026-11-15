@@ -67,14 +67,14 @@ public final class OfflinePhotoLabActivity extends Activity {
         b.setText(s);b.setAllCaps(false);b.setTextColor(BG);b.setBackground(rounded(color));
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,dp(48),1);
         lp.rightMargin=dp(8);parent.addView(b,lp);
-        b.setOnClickListener(v->work.run());return b;
+        StudioUi.styleButton(this,b,color,s,work);return b;
     }
     @Override public void onCreate(Bundle state){
         super.onCreate(state);
         getWindow().setStatusBarColor(BG);getWindow().setNavigationBarColor(BG);
         LinearLayout outer=column();outer.setBackgroundColor(BG);outer.setPadding(dp(18),dp(14),dp(18),dp(10));
         setContentView(outer);
-        TextView title=label("←   Offline Photo Lab",23,WHITE,true);title.setPadding(0,dp(4),0,dp(10));title.setOnClickListener(v->finish());
+        TextView title=label("←   Offline Photo Lab",23,WHITE,true);title.setPadding(0,dp(4),0,dp(10));StudioUi.bind(this,title,"Back to studio",this::finish);
         add(outer,title);
         TextView subtitle=label("Enhance your photos privately, without internet or a model download.",13,DIM,false);
         add(outer,subtitle);
