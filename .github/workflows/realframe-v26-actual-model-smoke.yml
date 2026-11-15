@@ -1,0 +1,52 @@
+name: RealFrame v2.6 Actual SD1.5 CPU Image Model Smoke
+on:
+  workflow_dispatch:
+  push:
+    branches: [realframe-studio-v26-repair]
+    paths:
+      - '.github/workflows/realframe-v26-actual-model-smoke.yml'
+permissions:
+  contents: read
+concurrency:
+  group: realframe-v26-real-model-smoke-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  actual-image-inference:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install pinned open-source native inference engine
+        run: bash realframe/tools/fetch_native_engine.sh
+      - name: Compile actual Linux stable-diffusion.cpp CLI (CPU)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y cmake ninja-build
+          cmake -S realframe/android/app/src/main/cpp/vendor/stable-diffusion.cpp -B /tmp/realframe-sd-smoke             -G Ninja -DCMAKE_BUILD_TYPE=Release             -DSD_BUILD_EXAMPLES=ON -DGGML_OPENMP=OFF             -DSD_WEBP=OFF -DSD_WEBM=OFF
+          cmake --build /tmp/realframe-sd-smoke --target sd-cli -j 3
+          find /tmp/realframe-sd-smoke -type f -name sd-cli -print
+      - name: Download REAL installed SD1.5 Q4 checkpoint and SHA-256 validate
+        run: |
+          curl -fLS --retry 3 --retry-delay 5 --connect-timeout 45             --max-time 1200 -o /tmp/realframe_sd15_q4.gguf             'https://huggingface.co/gpustack/stable-diffusion-v1-5-GGUF/resolve/main/stable-diffusion-v1-5-Q4_0.gguf?download=true'
+          echo 'c2f6e92f9d08d69cc673a1003528ac8199274b3c0eaec88d5fbefe5af67bd42b  /tmp/realframe_sd15_q4.gguf'             | sha256sum -c -
+      - name: Run REAL single-image diffusion CPU inference (not mock)
+        run: |
+          CLI=$(find /tmp/realframe-sd-smoke -type f -name sd-cli | head -n 1)
+          test -x "$CLI"
+          timeout 1200 "$CLI" -m /tmp/realframe_sd15_q4.gguf             -p 'a red ceramic mug on a wooden table, daylight, photo'             -W 128 -H 128 -s 1 --seed 1337             --output /tmp/realframe_real_cpu_smoke.png
+          python3 - <<'PY'
+          import struct
+          p='/tmp/realframe_real_cpu_smoke.png'
+          b=open(p,'rb').read(33)
+          assert len(b)==33 and b[:8]==b'\x89PNG\r\n\x1a\n', 'no real PNG output'
+          w,h=struct.unpack('>II',b[16:24])
+          assert (w,h)==(128,128), (w,h)
+          print('REAL CPU IMAGE GENERATED: 128x128 PNG from pinned 1.75GB GGUF')
+          PY
+      - name: Retain GENERATED sample image only (not model weights)
+        uses: actions/upload-artifact@v4
+        with:
+          name: realframe-v26-native-sd15-actual-pixels
+          path: /tmp/realframe_real_cpu_smoke.png
+          if-no-files-found: error
+          retention-days: 7
