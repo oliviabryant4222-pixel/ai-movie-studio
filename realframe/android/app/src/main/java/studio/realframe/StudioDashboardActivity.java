@@ -204,7 +204,7 @@ public final class StudioDashboardActivity extends Activity {
         heading("On-device generation & editing","Experimental local AI, no cloud upload");
         LinearLayout localAi=card(content,CARD);
         tile(localAi,"◉","LOCAL AI Image Batch (CPU beta)","One-tap setup, then up to 8 sequential on-device images",CYAN,()->open(LocalImageActivity.class));
-        tile(localAi,"▶","LOCAL AI Video (Wan CPU lab)","T2V inference + MP4 encoding; 3 model files required",0xFFFFC582,()->open(LocalVideoActivity.class));
+        tile(localAi,"▶","LOCAL AI Video (Wan CPU lab)","T2V inference + MP4; optional one-tap 3-model setup",0xFFFFC582,()->open(LocalVideoActivity.class));
         heading("Offline workspace","Available without internet or a cloud account");
         LinearLayout offline=card(content,CARD);
         tile(offline,"◈","Photo Lab","Enhance a photo and export JPG offline",CYAN,()->open(OfflinePhotoLabActivity.class));
