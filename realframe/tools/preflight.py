@@ -18,7 +18,7 @@ def main() -> None:
 
     manifest_path = ANDROID / 'app/src/main/AndroidManifest.xml'
     gradle_path = ANDROID / 'app/build.gradle.kts'
-    workflow_path = ROOT / '.github/workflows/android-debug.yml'
+    workflow_path = ROOT.parent / '.github/workflows/realframe-v22-build.yml'
     for path in [manifest_path, gradle_path, workflow_path]:
         require(path.exists(), f'Missing {path.relative_to(ROOT)}')
     if issues:
@@ -27,8 +27,8 @@ def main() -> None:
     gradle = gradle_path.read_text(encoding='utf-8')
     for key in ['compileSdk = 35', 'targetSdk = 35']:
         require(key in gradle, f'App gradle missing {key}')
-    require(any(v in gradle for v in ['versionName = "1.1.0-test"', 'versionName = "1.2.0-beta"', 'versionName = "1.3.0-beta"', 'versionName = "1.4.0-beta"', 'versionName = "1.5.0-beta"', 'versionName = "1.6.0-local-image-experimental"', 'versionName = "1.7.0-hybrid-batch-beta"', 'versionName = "1.8.0-local-video-experimental"', 'versionName = "1.9.0-local-online-hybrid-beta"', 'versionName = "2.0.0-one-tap-local-ai-beta"', 'versionName = "2.1.0-reference-movie-beta"']), 'Unexpected versionName')
-    require(any(v in gradle for v in ['applicationId = "studio.realframe.beta"', 'applicationId = "studio.realframe.v12"', 'applicationId = "studio.realframe.v13"', 'applicationId = "studio.realframe.v14"', 'applicationId = "studio.realframe.v15"', 'applicationId = "studio.realframe.v16"', 'applicationId = "studio.realframe.v17"', 'applicationId = "studio.realframe.v18"', 'applicationId = "studio.realframe.v19"', 'applicationId = "studio.realframe.v20"', 'applicationId = "studio.realframe.v21"']),
+    require(any(v in gradle for v in ['versionName = "1.1.0-test"', 'versionName = "1.2.0-beta"', 'versionName = "1.3.0-beta"', 'versionName = "1.4.0-beta"', 'versionName = "1.5.0-beta"', 'versionName = "1.6.0-local-image-experimental"', 'versionName = "1.7.0-hybrid-batch-beta"', 'versionName = "1.8.0-local-video-experimental"', 'versionName = "1.9.0-local-online-hybrid-beta"', 'versionName = "2.0.0-one-tap-local-ai-beta"', 'versionName = "2.1.0-reference-movie-beta"', 'versionName = "2.2.0-auto-wan-beta"']), 'Unexpected versionName')
+    require(any(v in gradle for v in ['applicationId = "studio.realframe.beta"', 'applicationId = "studio.realframe.v12"', 'applicationId = "studio.realframe.v13"', 'applicationId = "studio.realframe.v14"', 'applicationId = "studio.realframe.v15"', 'applicationId = "studio.realframe.v16"', 'applicationId = "studio.realframe.v17"', 'applicationId = "studio.realframe.v18"', 'applicationId = "studio.realframe.v19"', 'applicationId = "studio.realframe.v20"', 'applicationId = "studio.realframe.v21"', 'applicationId = "studio.realframe.v22"']),
             'Unexpected applicationId: verify package/manifest before publishing')
 
     root = ET.parse(manifest_path).getroot()
@@ -50,7 +50,7 @@ def main() -> None:
 
     base = ANDROID/'app/src/main/java/studio/realframe'
     required = ['MainActivity.java','RenderService.java','Renderer.java', 'StudioStore.java',
-                'SecretVault.java','ClipStitcher.java','MediaSignature.java', 'WebStudioActivity.java', 'StudioDashboardActivity.java', 'OfflinePhotoLabActivity.java', 'OfflineImageVideoActivity.java', 'ModelManagerActivity.java', 'ProductionPlannerActivity.java', 'LocalImageActivity.java', 'LocalImageEngine.java', 'UnifiedCreateActivity.java', 'HybridRoutePolicy.java', 'LocalVideoEngine.java', 'LocalVideoActivity.java', 'LocalVideoEncoder.java', 'LocalApiService.java', 'LocalApiSecurity.java', 'LocalApiWebPage.java', 'LocalApiActivity.java', 'LocalWebClientActivity.java', 'QuickStartActivity.java', 'AutoModelDownloadService.java', 'ReferenceStudioActivity.java', 'StoryMovieComposerActivity.java', 'LocalAutoFilmActivity.java']
+                'SecretVault.java','ClipStitcher.java','MediaSignature.java', 'WebStudioActivity.java', 'StudioDashboardActivity.java', 'OfflinePhotoLabActivity.java', 'OfflineImageVideoActivity.java', 'ModelManagerActivity.java', 'ProductionPlannerActivity.java', 'LocalImageActivity.java', 'LocalImageEngine.java', 'UnifiedCreateActivity.java', 'HybridRoutePolicy.java', 'LocalVideoEngine.java', 'LocalVideoActivity.java', 'LocalVideoEncoder.java', 'LocalApiService.java', 'LocalApiSecurity.java', 'LocalApiWebPage.java', 'LocalApiActivity.java', 'LocalWebClientActivity.java', 'QuickStartActivity.java', 'AutoModelDownloadService.java', 'AutoVideoModelDownloadService.java', 'LocalInferenceProbe.java', 'LocalProofActivity.java', 'ReferenceStudioActivity.java', 'StoryMovieComposerActivity.java', 'LocalAutoFilmActivity.java']
     for name in required:
         path = base / name
         require(path.is_file(), f'Missing Java file: {name}')
@@ -67,7 +67,7 @@ def main() -> None:
         for i in issues:
             print('ERROR:', i, file=sys.stderr)
         raise SystemExit(1)
-    print('PASS: 18 static config/source checks. Android compile and device behavior NOT tested.')
+    print('PASS: static config/source checks. Android compile and device behavior NOT tested.')
 
 
 if __name__ == '__main__':
