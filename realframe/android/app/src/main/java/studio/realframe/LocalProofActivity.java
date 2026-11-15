@@ -183,8 +183,13 @@ public final class LocalProofActivity extends Activity {
                 String detail=failure.getMessage()==null?failure.toString():failure.getMessage();
                 runOnUiThread(()->{
                     if(isFinishing()||isDestroyed())return;
+                    getSharedPreferences("realframe_local_proof",MODE_PRIVATE).edit()
+                        .putString("last_result","FAILED")
+                        .putString("last_error",detail.length()>360?detail.substring(0,360):detail)
+                        .putLong("last_failure_ms",System.currentTimeMillis()).apply();
                     status.setText("LOCAL TEST NOT VERIFIED: "+detail+
-                        "\nThis is not evidence that generation worked. Check model compatibility, RAM and native engine.");
+                        "\nNative loader: "+LocalImageEngine.lastNativeIssue()+
+                        "\nOpen Device Health and copy diagnostics for a reproducible error.");
                 });
             }finally{
                 running.set(false);
